@@ -1,0 +1,29 @@
+[package]
+name = "tetris_plugin"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+debug = ["bevy-inspector-egui"]
+default = []
+
+[dependencies]
+serde = "1.0"
+rand = "0.8"
+colored = {version = "2.0"}
+bevy-inspector-egui = {version = "0.8", optional = true}
+bevy_tweening = "0.3.3"
+
+# Engine
+[dependencies.bevy]
+default-features = false
+features = ["render"]
+version = "0.6"
+# Dependencies for WASM only
+[target.'cfg(target_arch = "wasm32")'.dependencies.getrandom]
+version="0.2"
+features=["js"]
+
+[dev-dependencies]
+bevy_egui = "0.12.1"
+pretty_assertions = "1.1"
