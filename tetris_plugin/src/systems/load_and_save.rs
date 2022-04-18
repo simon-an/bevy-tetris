@@ -30,7 +30,7 @@ pub(crate) fn load_and_save<T>(
             if board.map.transitions.is_none() {
                 file.write_all(board.map.as_savegame_string().as_bytes())
                     .expect("writing to file failed");
-            }else {
+            } else {
                 warn!("cannot save while transitions is going on");
             }
         } else if event == &GameCommand::Load {

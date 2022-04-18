@@ -26,13 +26,13 @@ pub(crate) struct Board {
 impl Board {
     pub fn animate(
         &mut self,
-        mut map: BTreeMap<&Coordinates, (Mut<Transform>, Entity)>,
+        map: BTreeMap<&Coordinates, (&Transform, Entity)>,
         mut commands: Commands,
     ) {
         if let Some(ts) = self.map.transitions.take() {
             for (from, to) in ts {
                 let gui_pos = self.calc_translation(&from);
-                if let Some((t, e)) = map.get_mut(&from) {
+                if let Some((t, e)) = map.get(&from) {
                     let (new_x, new_y): (f32, f32) = self.calc_translation(&(to.x, to.y).into());
                     // println!(
                     //     "current translation: {:?}, new pos {:?}",
@@ -415,13 +415,13 @@ mod tests {
     use super::*;
     use crate::{Board, Map, Matrix, Shape, ShapePosition, ShapeType, TileBlueprint, ToMap};
     use bevy::prelude::Entity;
-    use bevy::{render::options::WgpuOptions, winit::WinitPlugin, DefaultPlugins};
+    use bevy::{render::settings::WgpuSettings, winit::WinitPlugin, DefaultPlugins};
     use bevy_egui::EguiPlugin;
 
     #[test]
     fn headless_mode() {
         App::new()
-            .insert_resource(WgpuOptions {
+            .insert_resource(WgpuSettings {
                 backends: None,
                 ..Default::default()
             })

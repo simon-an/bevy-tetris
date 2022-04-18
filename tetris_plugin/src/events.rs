@@ -33,8 +33,10 @@ pub enum RotateEvent {
 pub enum GameCommand {
     Load,
     Save,
-    Reset,
+    NewGame,
     Pause,
+    Clear,
     IncreaseSpeed,
     DecreaseSpeed,
+    TogglePause,
 }

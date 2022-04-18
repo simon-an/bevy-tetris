@@ -1,19 +1,16 @@
-use bevy::{ecs::schedule::StateData, prelude::*};
+use bevy::prelude::*;
 
-use crate::{BoardAssets, GameOverEvent};
+use crate::{BoardAssets, GameOverEvent, GameStatus};
 
-pub fn stop<T>(
+pub fn gameover(
     mut commands: Commands,
     mut game_over_event_rdr: EventReader<GameOverEvent>,
-    mut state: ResMut<State<T>>,
-    pause_state: ResMut<T>,
+    mut state: ResMut<State<GameStatus>>,
     board_assets: Res<BoardAssets>,
-) where
-    T: StateData + Send + Sync,
-{
+) {
     let event = game_over_event_rdr.iter().next();
     if event.is_some() {
-        state.set(pause_state.clone()).unwrap();
+        state.set(GameStatus::Gameover).unwrap();
 
         commands.spawn_bundle(Text2dBundle {
             text: Text {

@@ -8,14 +8,14 @@ pub(crate) fn line(
     mut commands: Commands,
     mut board: ResMut<Board>,
     new_on_the_block: Query<(Entity, &Coordinates), Added<Block>>,
-    mut all: Query<(Entity, &Coordinates, &mut Transform)>,
+    all: Query<(Entity, &Coordinates, &mut Transform)>,
 ) {
     let mut lines: Vec<u16> = vec![];
     let c_e_map: BTreeMap<&Coordinates, Entity> = all.iter().map(|(e, c, _)| (c, e)).collect();
 
     assert_eq!(c_e_map.len(), board.map.occupied());
 
-    let c_t_map: BTreeMap<_, _> = all.iter_mut().map(|(e, c, t)| (c, (t, e))).collect();
+    let c_t_map: BTreeMap<_, _> = all.iter().map(|(e, c, t)| (c, (t, e))).collect();
     assert_eq!(c_t_map.len(), board.map.occupied());
 
     for (entity, coordinates) in new_on_the_block.iter() {

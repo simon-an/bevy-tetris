@@ -12,7 +12,6 @@ pub(crate) fn spawn_debug_block(
     options: ResMut<BoardOptions>,
     window: Res<WindowDescriptor>,
 ) {
-
     let tween = Tween::new(
         // Use a quadratic easing on both endpoints.
         EaseFunction::CircularInOut,

@@ -1,7 +1,7 @@
 [package]
 name = "bevy-tetris"
-version = "0.1.0"
-authors = ["drecksnoob"]
+version = "0.2.0"
+authors = ["simon_an"]
 edition = "2021"
 
 [workspace]
@@ -18,21 +18,21 @@ default = []
 debug = ["tetris_plugin/debug", "bevy-inspector-egui"]
 
 [dependencies]
-bevy_egui = "0.11"
+bevy_egui = "0.13.0"
 tetris_plugin = { path = "tetris_plugin" }
 rand = "0.8.5"
-bevy-inspector-egui = { version = "0.8", optional = true }
+bevy-inspector-egui = { version = "0.10.0", optional = true }
 
 [dependencies.bevy]
-version = "0.6"
+version = "0.7"
 default-features = false
 features = ["render", "bevy_winit", "png"]
 
 # Dependencies for native only.
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies.bevy]
-version = "0.6"
+version = "0.7"
 default-features = false
-features = ["x11"]
+features = ["wayland"]
 
 [dev-dependencies]
 once_cell = "1.9"

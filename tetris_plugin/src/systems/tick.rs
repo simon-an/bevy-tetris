@@ -63,8 +63,9 @@ pub(crate) fn tock(
 
         let mut changes = vec![];
         for (entity, _, _current, _coordinates, mut transform) in vec.into_iter() {
-            let target: Option<(Coordinates, Tile)> =
-                board.move_block(&entity, &crate::MoveEvent::Down).expect("block must move");
+            let target: Option<(Coordinates, Tile)> = board
+                .move_block(&entity, &crate::MoveEvent::Down)
+                .expect("block must move");
             debug!("move result {:?}", target);
             if let Some((coordinate, tile)) = target {
                 update_block_sprites(&mut transform, &coordinate, &board);

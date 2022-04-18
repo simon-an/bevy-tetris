@@ -1,5 +1,5 @@
-use bevy::window::WindowDescriptor;
 use bevy::ecs::system::Res;
+use bevy::window::WindowDescriptor;
 
 /// Computes a tile size that matches the window according to the tile map size
 pub fn adaptative_tile_size(
