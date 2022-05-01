@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
 
 use crate::AppState;
-use tetris_plugin::{BoardOptions, TileSize};
+use tetris_plugin::{BoardOptions, Score, TileSize};
 
 pub struct Images {
     bevy_icon: Handle<Image>,
@@ -21,6 +21,7 @@ pub fn ui_example(
     mut egui_ctx: ResMut<EguiContext>,
     app_state: Res<State<AppState>>,
     mut options: ResMut<BoardOptions>,
+    score: Option<Res<Score>>,
     // board_assets: Res<BoardAsset>
 
     // mut ui_state: ResMut<UiState>,
@@ -45,6 +46,14 @@ pub fn ui_example(
     egui::SidePanel::left("side_panel")
         .default_width(200.0)
         .show(egui_ctx.ctx_mut(), |ui| {
+            ui.heading("Score");
+            if let Some(score) = score {
+                ui.heading(score.0.to_string());
+            } else {
+                ui.heading("no score");
+            }
+
+            ui.allocate_space(egui::Vec2::new(200.0, 20.0));
             ui.heading("Status");
 
             ui.vertical(|ui| {

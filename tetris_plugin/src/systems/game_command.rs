@@ -8,8 +8,6 @@ pub(crate) fn events_to_state(
     mut state: ResMut<State<GameStatus>>,
 ) {
     for event in game_command.iter() {
-        println!("event: {:?}", event);
-
         match event {
             GameCommand::TogglePause => {
                 if state.current() == &GameStatus::Paused {
@@ -30,6 +28,12 @@ pub(crate) fn events_to_state(
                     .push(GameStatus::Paused)
                     .expect("pushing state must work");
                 commands.insert_resource(PopupText("PAUSE".to_string()));
+            }
+            GameCommand::Save => {
+                // Handled in load_and_save system
+            }
+            GameCommand::Load => {
+                // Handled in load_and_save system
             }
             _ => info!("do nothing with command {:?}", event),
         }

@@ -1,9 +1,7 @@
 use bevy::core::Timer;
 
-use crate::{resources::Color, Coordinates, ShapeType, Tetromino};
-
 #[derive(Debug, Copy, Clone)]
-pub struct BombExplosionEvent(i64); // Score
+pub struct ScoreEvent(pub u64);
 
 #[derive(Debug, Clone)]
 pub struct TickEvent(pub Timer);

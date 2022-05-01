@@ -1,4 +1,5 @@
 mod components;
+pub(crate) mod utils;
 
 use bevy_tweening::TweeningPlugin;
 pub(crate) use components::*;
@@ -47,9 +48,6 @@ pub struct TetrisPlugin<T> {
     pub plugin_init: T,
 }
 
-// label for our debug stage
-static DEBUG: &str = "debug";
-
 pub fn state_running(mut state: ResMut<State<GameStatus>>) {
     state.set(GameStatus::Running).unwrap();
 }
@@ -87,6 +85,11 @@ where
                 .with_system(systems::show_popup),
         );
         app.add_system_set(
+            SystemSet::on_update(GameStatus::Paused)
+                .label("on_update_pause")
+                .with_system(systems::load_and_save::<T>.exclusive_system().at_end()),
+        );
+        app.add_system_set(
             SystemSet::on_pause(GameStatus::Paused)
                 .label("on_pause_paused")
                 .with_system(systems::hide_popup),
@@ -107,28 +110,21 @@ where
                 .with_system(systems::rotate)
                 .with_system(systems::gogo)
                 .with_system(systems::tock)
-                .with_system(input::input),
+                .with_system(systems::animate)
+                .with_system(systems::score)
+                .with_system(input::input)
+                .with_system(systems::load_and_save_warning),
         );
-        // app.add_system_to_stage(CoreStage::PostUpdate, systems::load_and_save::<T>);
-        // app.add_system_set_to_stage(
-        //     CoreStage::PostUpdate,
-        //     SystemSet::on_update(GameStatus::Running)
-        //         .label("running_post_update")
-        //         // .with_system(
-        //         //     systems::load_and_save::<T>.exclusive_system().at_end(), // systems::line,
-        //         // ),
-        // );
         app.add_system_set(
             SystemSet::on_enter(GameStatus::Gameover)
                 .label("on_enter_gameover")
                 .with_system(systems::cleanup_board),
         );
-        // .add_stage_after(CoreStage::Update, DEBUG, SystemStage::single_threaded());
-        // .add_system_to_stage(DEBUG, debug_player_hp)
         app.add_event::<SpawnEvent>()
             .add_event::<GameCommand>()
             .add_event::<GameOverEvent>()
             .add_event::<RotateEvent>()
+            .add_event::<ScoreEvent>()
             .add_event::<MoveEvent>();
 
         #[cfg(feature = "debug")]

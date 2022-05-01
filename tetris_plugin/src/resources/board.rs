@@ -1,99 +1,23 @@
-use bevy_tweening::lens::TransformPositionLens;
-use bevy_tweening::*;
-use std::collections::BTreeMap;
-use std::time::Duration;
-
 use crate::Bounds2;
 use crate::Coordinates;
-use crate::Map;
-use crate::MoveEvent;
 use crate::RotateEvent;
-use crate::ShapeEntity;
 use crate::ShapePosition;
-use crate::ShapeType;
-use crate::Tile;
 use bevy::prelude::*;
 
 #[derive(Debug)]
 pub(crate) struct Board {
     pub bounds: Bounds2,
     pub tile_size: f32,
-    pub map: Map,
-    pub current_tetromino_shape: Option<ShapeEntity>,
+    // pub current_tetromino_shape: Option<ShapeEntity>, // now a world resource
     pub entity: Entity,
 }
 
 impl Board {
-    pub fn animate(
-        &mut self,
-        map: BTreeMap<&Coordinates, (&Transform, Entity)>,
-        mut commands: Commands,
-    ) {
-        if let Some(ts) = self.map.transitions.take() {
-            for (from, to) in ts {
-                // let gui_pos = self.calc_translation(&from);
-                if let Some((t, e)) = map.get(&from) {
-                    let (new_x, new_y): (f32, f32) = self.calc_translation(&(to.x, to.y).into());
-                    // println!(
-                    //     "current translation: {:?}, new pos {:?}",
-                    //     gui_pos,
-                    //     (new_x, new_y)
-                    // );
-
-                    let tween = Tween::new(
-                        // Use a quadratic easing on both endpoints.
-                        EaseFunction::QuadraticInOut,
-                        // Loop animation back and forth.
-                        TweeningType::Once,
-                        // Animation time (one way only; for ping-pong it takes 2 seconds
-                        // to come back to start).
-                        Duration::from_secs(1),
-                        // The lens gives access to the Transform component of the Entity,
-                        // for the Animator to animate it. It also contains the start and
-                        // end values respectively associated with the progress ratios 0. and 1.
-                        TransformPositionLens {
-                            start: t.translation,
-                            end: Vec3::new(new_x, new_y, 5.),
-                        },
-                    );
-
-                    commands
-                        .entity(*e)
-                        // Add an Animator component to control and execute the animation.
-                        .insert(Animator::new(tween));
-                } else {
-                    panic!("from coordinates not found {}", from)
-                }
-            }
-        }
-    }
-
     // TODO TEST THIS
-    pub fn set_map(&mut self, map: Map) {
-        self.current_tetromino_shape = Some(map.try_parse_shape().expect("shape must be parsable"));
-        self.map = map;
-    }
-    pub fn set_positions(&mut self, pos: Vec<(Entity, ShapePosition)>) {
-        match self.current_tetromino_shape.as_mut() {
-            Some(v) => (*v)
-                .positions
-                .append(&mut pos.into_iter().collect::<BTreeMap<Entity, ShapePosition>>()),
-            None => {}
-        }
-    }
-
-    pub fn get_color(shape: ShapeType) -> Color {
-        // make customizeable
-        match shape {
-            ShapeType::I => Color::rgb(0.0, 0.7, 0.7),
-            ShapeType::O => Color::rgb(0.7, 0.7, 0.0), // square, yellow
-            ShapeType::T => Color::rgb(0.7, 0.0, 0.7), // T, purple
-            ShapeType::Z => Color::rgb(0.7, 0.0, 0.0), // Z, red
-            ShapeType::S => Color::rgb(0.0, 0.7, 0.0), // S, green
-            ShapeType::L => Color::rgb(0.0, 0.0, 0.7), // L, blue
-            ShapeType::J => Color::rgb(0.9, 0.25, 0.0), // J, orange
-        }
-    }
+    // pub fn set_map(&mut self, map: Map) {
+    //     self.current_tetromino_shape = Some(map.try_parse_shape().expect("shape must be parsable"));
+    //     self.map = map;
+    // }
 
     pub fn calc_translation(&self, coordinates: &Coordinates) -> (f32, f32) {
         let new_x: f32 = (coordinates.x as f32 * self.tile_size) + (self.tile_size / 2.0);
@@ -101,209 +25,6 @@ impl Board {
             self.bounds.size.y - (coordinates.y as f32 * self.tile_size) - 0.5 * self.tile_size;
 
         (new_x, new_y)
-    }
-    pub(crate) fn get_current_shape_coordinates(&self) -> Vec<Coordinates> {
-        self.map.get_current_shape_coordinates()
-    }
-    pub(crate) fn get_current_shape_tile_coordinates(&self) -> Vec<Coordinates> {
-        self.map.get_current_shape_tile_coordinates()
-    }
-
-    pub fn rotate_block(&mut self, e: &Entity, event: &RotateEvent) -> Option<(Coordinates, Tile)> {
-        let mut coords = self.shapepos_as_coords(
-            self.current_tetromino_shape
-                .as_ref()
-                .unwrap()
-                .positions
-                .get(e)
-                .unwrap(),
-        );
-
-        if let Some(ShapeEntity {
-            // anker,
-            position_on_board,
-            positions,
-            shape_type,
-            layout,
-            ..
-        }) = &mut self.current_tetromino_shape
-        {
-            match shape_type {
-                crate::ShapeType::O => return None,
-                crate::ShapeType::I => return None, // TODO
-                _ => (),
-            }
-
-            println!("rotating entity: {:?}", e);
-            let pos = positions.get_mut(e).expect("Entity must be known");
-
-            let orig_x = pos.x;
-            let orig_y = pos.y;
-            println!("index {:?}", pos);
-            if orig_x == 1 || orig_y == 1 {
-                if let &RotateEvent::ClockWise = event {
-                    pos.x = match orig_x {
-                        0 => 1,
-                        1 if orig_y == 0 => 2,
-                        1 if orig_y == 2 => 0,
-                        2 => 1,
-                        _ => 1,
-                    };
-                    pos.y = match orig_y {
-                        0 => 1,
-                        1 if orig_x == 0 => 0,
-                        1 if orig_x == 2 => 2,
-                        2 => 1,
-                        _ => 1,
-                    };
-                } else {
-                    pos.x = match orig_x {
-                        0 => 1,
-                        1 if orig_y == 0 => 0,
-                        1 if orig_y == 2 => 2,
-                        2 => 1,
-                        _ => 1,
-                    };
-                    pos.y = match orig_y {
-                        0 => 1,
-                        1 if orig_x == 0 => 2,
-                        1 if orig_x == 2 => 0,
-                        2 => 1,
-                        _ => 1,
-                    };
-                }
-            } else {
-                if let &RotateEvent::ClockWise = event {
-                    let (x, y) = match (orig_x, orig_y) {
-                        (0, 0) => (2, 0),
-                        (2, 0) => (2, 2),
-                        (2, 2) => (0, 2),
-                        (0, 2) => (0, 0),
-                        _ => (1, 1),
-                    };
-                    pos.x = x;
-                    pos.y = y;
-                } else {
-                    let (x, y) = match (orig_x, orig_y) {
-                        (0, 0) => (0, 2),
-                        (0, 2) => (2, 2),
-                        (2, 2) => (2, 0),
-                        (2, 0) => (0, 0),
-                        _ => (1, 1),
-                    };
-                    pos.x = x;
-                    pos.y = y;
-                }
-            }
-
-            println!("new index {:?}", pos);
-
-            let delta_x: i16 = pos.x as i16 - orig_x as i16;
-            let delta_y: i16 = pos.y as i16 - orig_y as i16;
-
-            println!("new index {:?}. delta_x {delta_x}, delta_y {delta_y}", pos);
-
-            if delta_x.is_negative() {
-                coords.x -= (-delta_x) as u16;
-            } else {
-                coords.x += delta_x as u16;
-            }
-            if delta_y.is_negative() {
-                coords.y -= (-delta_y) as u16;
-            } else {
-                coords.y += delta_y as u16;
-            }
-
-            // if delta_x == 0 && delta_y == 0 {
-            //     None
-            // } else {
-            let tile = self
-                .map
-                .insert(position_on_board.clone() + (orig_x, orig_y), Tile::Empty)
-                .unwrap();
-            Some((coords, tile))
-            // }
-        } else {
-            None
-        }
-    }
-    pub fn move_shape(&mut self, event: &MoveEvent) {
-        // if let Some(ShapeEntity {
-        //     mut position_on_board,
-        //     ..
-        // }) = &mut self.current_tetromino_shape
-        if let Some(shape) = &mut self.current_tetromino_shape {
-            let old = shape.position_on_board.clone();
-            match event {
-                &MoveEvent::Down => {
-                    shape.position_on_board.y += 1;
-                }
-                &MoveEvent::Left => {
-                    if shape.position_on_board.x > 0 {
-                        shape.position_on_board.x -= 1;
-                    } else {
-                        warn!("cannot move left");
-                    }
-                }
-                &MoveEvent::Right => {
-                    shape.position_on_board.x += 1;
-                }
-            };
-            trace!(
-                "shape has moved from {} to {}",
-                old,
-                shape.position_on_board
-            );
-        } else {
-            error!("shape does not exist; so no shape has moved");
-        }
-    }
-    pub fn move_block(
-        &mut self,
-        e: &Entity,
-        event: &MoveEvent,
-    ) -> Result<Option<(Coordinates, Tile)>, &str> {
-        if let Some(ShapeEntity {
-            anker,
-            position_on_board,
-            positions,
-            ..
-        }) = &mut self.current_tetromino_shape
-        {
-            debug!("move entity: {:?}", e);
-            let pos = positions.get(e);
-            if pos.is_none() {
-                return Err("enitity not found");
-            }
-            let pos = pos.unwrap();
-            let mut coords = position_on_board.clone() - anker.clone() + pos.clone();
-            let tile = self.map.insert(coords, Tile::Empty);
-            if tile.is_none() {
-                return Err("tile not found");
-            }
-            let tile = tile.unwrap();
-
-            match event {
-                &MoveEvent::Down => {
-                    coords.y += 1;
-                }
-                &MoveEvent::Left => {
-                    coords.x -= 1;
-                }
-                &MoveEvent::Right => {
-                    coords.x += 1;
-                }
-            };
-            Ok(Some((coords, tile)))
-        } else {
-            Ok(None)
-        }
-    }
-
-    pub fn get_shape_positions(&self) -> Option<Vec<&ShapePosition>> {
-        self.current_tetromino_shape
-            .as_ref()
-            .map(|s| s.positions.values().collect())
     }
 
     /// only call this if board has a shape
@@ -398,14 +119,6 @@ impl Board {
         buffer.push_str(&map);
         buffer
     }
-
-    pub(crate) fn shapepos_as_coords(&self, pos: &ShapePosition) -> Coordinates {
-        let shape = self
-            .current_tetromino_shape
-            .as_ref()
-            .expect("shapepos_as_coords may only be called with a shape present");
-        shape.position_on_board.clone() - shape.anker.clone() + pos.clone()
-    }
 }
 
 #[cfg(test)]
@@ -474,18 +187,7 @@ mod tests {
                 position: Vec2::splat(15.0),
                 size: Vec2::splat(15.0),
             },
-            current_tetromino_shape: Some(ShapeEntity {
-                anker: anker.clone(),
-                positions: positions.clone(),
-                shape_type: ShapeType::S,
-                layout: Matrix {
-                    width: 3,
-                    height: 2,
-                },
-                position_on_board: (1, 1).into(),
-            }),
             entity,
-            map,
             tile_size: 99.999,
         };
 
@@ -648,9 +350,8 @@ mod tests {
                 position: Vec2::splat(0.),
                 size: Vec2::splat(1000.),
             },
-            current_tetromino_shape: Some(shapee),
+
             entity,
-            map,
             tile_size: 99.999,
         };
 

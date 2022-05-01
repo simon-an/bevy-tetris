@@ -4,10 +4,10 @@ use std::{
     fmt::{Display, Formatter},
 };
 
-use bevy::prelude::{Color, Entity};
+use bevy::prelude::{trace, warn, Color, Entity};
 use rand::{distributions::Standard, prelude::Distribution, Rng};
 
-use crate::{Coordinates, Matrix, TileBlueprint};
+use crate::{Coordinates, Matrix, MoveEvent, TileBlueprint};
 
 // Holds a block's position within a tetromino for rotation
 #[cfg_attr(feature = "debug", derive(bevy_inspector_egui::Inspectable))]
@@ -71,6 +71,34 @@ impl Display for Shape {
 use bevy::prelude::World;
 
 impl ShapeEntity {
+    pub fn shapepos_as_coords(&self, pos: &ShapePosition) -> Coordinates {
+        self.position_on_board.clone() - self.anker.clone() + pos.clone()
+    }
+
+    pub fn move_shape(&mut self, event: &MoveEvent) {
+        let old = self.position_on_board.clone();
+        match event {
+            &MoveEvent::Down => {
+                self.position_on_board.y += 1;
+            }
+            &MoveEvent::Left => {
+                if self.position_on_board.x > 0 {
+                    self.position_on_board.x -= 1;
+                } else {
+                    warn!("cannot move left");
+                }
+            }
+            &MoveEvent::Right => {
+                self.position_on_board.x += 1;
+            }
+        };
+        trace!("shape has moved from {} to {}", old, self.position_on_board);
+    }
+
+    pub fn get_positions(&self) -> Vec<&ShapePosition> {
+        self.positions.values().collect()
+    }
+
     #[cfg(test)]
     pub fn spawn(shape: Shape, position_on_board: &Coordinates, world: &mut World) -> Self {
         let Shape {
@@ -137,7 +165,6 @@ impl Display for ShapeType {
 
 impl ShapeType {
     pub fn get_color(&self) -> Color {
-        // TODO move to board
         match self {
             &Self::I => Color::rgb(0.0, 0.7, 0.7),
             &Self::O => Color::rgb(0.7, 0.7, 0.0), // square, yellow

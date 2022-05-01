@@ -1,6 +1,7 @@
 use bevy::window::Windows;
 use bevy::{log, math::Vec3Swizzles, prelude::*};
 
+use crate::Score;
 use crate::{
     bounds::Bounds2, Board, BoardAssets, BoardOptions, BoardPosition, Map, SpawnEvent, TileSize,
 };
@@ -79,15 +80,19 @@ pub fn create_board(
     };
 
     commands.insert_resource(Board {
-        map: Map::new(options.map_size.0 as usize, options.map_size.1 as usize),
         entity: board_entity,
         tile_size,
         bounds: Bounds2 {
             position: board_position.xy(),
             size: board_size,
         },
-        current_tetromino_shape: None,
     });
+
+    commands.insert_resource(Map::new(
+        options.map_size.0 as usize,
+        options.map_size.1 as usize,
+    ));
+    commands.insert_resource(Score(0));
 
     spawn_ewr.send(SpawnEvent);
 }
