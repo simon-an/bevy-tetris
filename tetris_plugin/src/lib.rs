@@ -87,8 +87,13 @@ where
                 .with_system(systems::show_popup),
         );
         app.add_system_set(
+            SystemSet::on_pause(GameStatus::Paused)
+                .label("on_pause_paused")
+                .with_system(systems::hide_popup),
+        );
+        app.add_system_set(
             SystemSet::on_exit(GameStatus::Paused)
-                .label("on_exit_pause")
+                .label("on_exit_paused")
                 .with_system(systems::hide_popup),
         );
         app.add_system_set(SystemSet::on_enter(GameStatus::Running).label("on_enter_running"));
