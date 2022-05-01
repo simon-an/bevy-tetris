@@ -1,3 +1,4 @@
+use bevy::window::Windows;
 use bevy::{log, math::Vec3Swizzles, prelude::*};
 
 use crate::{
@@ -6,24 +7,20 @@ use crate::{
 
 pub fn create_board(
     mut commands: Commands,
-    board_options: Option<Res<BoardOptions>>,
-    window: Res<WindowDescriptor>,
+    options: Res<BoardOptions>,
+    window_descriptor: Res<WindowDescriptor>,
+    windows: Res<Windows>,
     board_assets: Res<BoardAssets>,
     mut spawn_ewr: EventWriter<SpawnEvent>,
 ) {
-    let options = match board_options {
-        None => BoardOptions::default(), // If no options is set we use the default one
-        Some(o) => o.clone(),
-    };
+    println!("windows {:?}", windows);
 
     // We define the size of our tiles in world space
     let tile_size = match options.tile_size {
         TileSize::Fixed(v) => v,
-        TileSize::Adaptive { min, max } => crate::window::adaptative_tile_size(
-            window,
-            (min, max),
-            (options.map_size.0, options.map_size.1),
-        ),
+        TileSize::Adaptive { min, max } => {
+            crate::window::adaptative_tile_size(window_descriptor, (min, max), &options)
+        }
     };
     log::info!("tile size is {}", tile_size);
 

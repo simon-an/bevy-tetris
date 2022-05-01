@@ -1,7 +1,5 @@
 mod components;
 
-use std::marker::PhantomData;
-
 use bevy_tweening::TweeningPlugin;
 pub(crate) use components::*;
 mod resources;
@@ -13,6 +11,8 @@ pub use events::*;
 mod bounds;
 mod window;
 pub(crate) use bounds::*;
+mod game_command_handler;
+mod input;
 
 use bevy::ecs::schedule::StateData;
 use bevy::log;
@@ -23,13 +23,14 @@ use bevy::prelude::*;
 use bevy_inspector_egui::RegisterInspectable;
 
 /// Condition checking our timer
-fn tick_timer(mytimer: Res<TickEvent>) -> bool {
-    mytimer.0.just_finished()
-}
+// fn tick_timer(mytimer: Res<TickEvent>) -> bool {
+//     mytimer.0.just_finished()
+// }
 
 /// Timers gotta be ticked
 fn tick_mytimer(mut mytimer: ResMut<TickEvent>, time: Res<Time>) {
     mytimer.0.tick(time.delta());
+    // println!("timer: {:?}", mytimer.0.elapsed_secs());
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -65,6 +66,9 @@ where
         // When the running states comes into the stack we load a board
         app.insert_resource(TickEvent(Timer::from_seconds(1.0, true)));
         app.add_state(GameStatus::WaitingForMain);
+        // app.add_state_to_stage(CoreStage::PostUpdate, GameStatus::WaitingForMain);
+        app.add_system(systems::events_to_state);
+        app.add_system(game_command_handler::input);
         app.add_system_set(
             SystemSet::on_enter(self.plugin_init.clone())
                 .label("map_app_state_to_plugin_state")
@@ -77,34 +81,48 @@ where
                 .with_system(systems::spawn_debug_block)
                 .with_system(state_running),
         );
-        // app.add_system_set(SystemSet::on_enter(GameStatus::Paused).label("on_enter_pause"));
-        // app.add_system_set(SystemSet::on_exit(GameStatus::Paused).label("on_exit_pause"));
-        // app.add_system_set(SystemSet::on_enter(GameStatus::Running).label("on_enter_running"));
+        app.add_system_set(
+            SystemSet::on_enter(GameStatus::Paused)
+                .label("on_enter_pause")
+                .with_system(systems::show_popup),
+        );
+        app.add_system_set(
+            SystemSet::on_exit(GameStatus::Paused)
+                .label("on_exit_pause")
+                .with_system(systems::hide_popup),
+        );
+        app.add_system_set(SystemSet::on_enter(GameStatus::Running).label("on_enter_running"));
         app.add_system_set(
             SystemSet::on_update(GameStatus::Running)
                 .label("running")
-                // .with_system(tick_mytimer)
+                .with_system(tick_mytimer)
                 .with_system(systems::gameover)
                 .with_system(systems::line.exclusive_system().at_end())
                 .with_system(systems::spawn_tetromino)
                 .with_system(systems::rotate)
                 .with_system(systems::gogo)
-                .with_system(systems::tock),
+                .with_system(systems::tock)
+                .with_system(input::input),
         );
-        // app.add_system_to_stage(
+        // app.add_system_to_stage(CoreStage::PostUpdate, systems::load_and_save::<T>);
+        // app.add_system_set_to_stage(
         //     CoreStage::PostUpdate,
-        //     systems::load_and_save::<T>.exclusive_system().at_end(),
-        // )
-        // .add_system_set(
-        //     SystemSet::on_enter(GameStatus::Gameover)
-        //         .label("on_enter_gameover")
-        //         .with_system(systems::cleanup_board),
-        // )
+        //     SystemSet::on_update(GameStatus::Running)
+        //         .label("running_post_update")
+        //         // .with_system(
+        //         //     systems::load_and_save::<T>.exclusive_system().at_end(), // systems::line,
+        //         // ),
+        // );
+        app.add_system_set(
+            SystemSet::on_enter(GameStatus::Gameover)
+                .label("on_enter_gameover")
+                .with_system(systems::cleanup_board),
+        );
         // .add_stage_after(CoreStage::Update, DEBUG, SystemStage::single_threaded());
         // .add_system_to_stage(DEBUG, debug_player_hp)
         app.add_event::<SpawnEvent>()
-            .add_event::<GameOverEvent>()
             .add_event::<GameCommand>()
+            .add_event::<GameOverEvent>()
             .add_event::<RotateEvent>()
             .add_event::<MoveEvent>();
 

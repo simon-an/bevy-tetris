@@ -10,3 +10,5 @@ pub(crate) use shape::*;
 mod shape;
 pub(crate) use map::*;
 mod map;
+pub(crate) use popup::{PopupRef, PopupText};
+mod popup;

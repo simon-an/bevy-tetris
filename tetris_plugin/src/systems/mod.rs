@@ -14,7 +14,17 @@ mod load_and_save;
 pub(crate) use load_and_save::*;
 mod engine;
 pub(crate) use engine::*;
+
+#[cfg(not(feature = "debug"))]
+pub(crate) fn spawn_debug_block() {}
+#[cfg(feature = "debug")]
 mod spawn_debug_tile;
-pub(crate) use spawn_debug_tile::*;
+#[cfg(feature = "debug")]
+pub(crate) use spawn_debug_tile::spawn_debug_block;
+
 mod board;
 pub(crate) use board::*;
+mod popup;
+pub(crate) use popup::*;
+mod game_command;
+pub(crate) use game_command::events_to_state;

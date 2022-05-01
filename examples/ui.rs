@@ -28,6 +28,8 @@ fn main() {
         .insert_resource(WinitSettings::desktop_app())
         .insert_resource(WindowDescriptor {
             present_mode: PresentMode::Mailbox,
+            width: 5000.,
+            height: 1400.,
             ..Default::default()
         })
         .init_resource::<UiState>()

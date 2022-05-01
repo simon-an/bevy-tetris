@@ -23,7 +23,7 @@ pub(crate) fn rotate(
     mut current_query: Query<(Entity, &mut Tetromino, &CurrentTetromino, &mut Transform)>,
 ) {
     for event in rotate_event_rdr.iter() {
-        let all_clear = board.is_free(&event);
+        let all_clear = board.is_free(&event); // TODO does not prevent panic in line 42
         if all_clear {
             let mut changes = vec![];
             for (entity, _, _current, mut transform) in current_query.iter_mut() {
@@ -39,7 +39,7 @@ pub(crate) fn rotate(
             // insert tile after ALL previous one have been set to empty
             changes.into_iter().for_each(|(coordinates, tile)| {
                 let mustbe_empty_tile = board.map.insert(coordinates, tile).unwrap();
-                assert_eq!(mustbe_empty_tile, Tile::Empty);
+                assert_eq!(mustbe_empty_tile, Tile::Empty); // TODO this can be a collision with an existing block
             });
         } else {
             info!("board is not free for rotation");

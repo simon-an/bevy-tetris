@@ -30,11 +30,9 @@ pub(crate) fn spawn_debug_block(
     );
     let tile_size = match options.tile_size {
         TileSize::Fixed(v) => v,
-        TileSize::Adaptive { min, max } => crate::window::adaptative_tile_size(
-            window,
-            (min, max),
-            (options.map_size.0, options.map_size.1),
-        ),
+        TileSize::Adaptive { min, max } => {
+            crate::window::adaptative_tile_size(window, (min, max), &options)
+        }
     };
 
     let entity = commands

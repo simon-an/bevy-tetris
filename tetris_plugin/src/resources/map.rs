@@ -245,25 +245,23 @@ impl Map {
             });
     }
 
-    pub(crate) fn despawn_lines(&mut self, mut lines: Vec<u16>) -> Vec<Coordinates> {
+    pub(crate) fn set_lines_to_empty(&mut self, mut lines: Vec<u16>) -> Vec<Coordinates> {
         // SORT LINES REV
         lines.sort();
-        lines.reverse();
+        // lines.reverse();
         let mut delted_blocks: Vec<Coordinates> = vec![];
         let mut removed_lines = 0;
         for i in lines.clone() {
             let line_index = i + removed_lines;
-            // despawn a line
-            let mut r = self.despawn_line(line_index);
+            let mut r = self.set_line_to_empty(line_index);
             delted_blocks.append(&mut r);
             // move all lines down
 
             removed_lines += 1;
         }
-        // let moved_blocks = self.move_blocks_above_line(lines);
         delted_blocks
     }
-    pub(crate) fn despawn_line(&mut self, line: u16) -> Vec<Coordinates> {
+    pub(crate) fn set_line_to_empty(&mut self, line: u16) -> Vec<Coordinates> {
         let mut res = vec![];
         self.inner
             .iter_mut()

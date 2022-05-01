@@ -8,8 +8,7 @@ use crate::{
 pub(crate) fn tock(
     mut commands: Commands,
     mut board: ResMut<Board>,
-    time: Res<Time>,
-    mut timer: ResMut<TickEvent>,
+    timer: Res<TickEvent>,
     mut current_query: Query<(
         Entity,
         &mut Tetromino,
@@ -19,11 +18,6 @@ pub(crate) fn tock(
     )>,
     mut spawn_ewr: EventWriter<SpawnEvent>,
 ) {
-    timer.0.tick(time.delta());
-    // for event in move_event_rdr.iter() {
-    //     println!("moved into {:?}", event);
-    // }
-
     if timer.0.just_finished() {
         #[cfg(feature = "debug")]
         bevy::log::info!("{}", (*board).console_output());

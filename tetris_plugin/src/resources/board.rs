@@ -31,7 +31,7 @@ impl Board {
     ) {
         if let Some(ts) = self.map.transitions.take() {
             for (from, to) in ts {
-                let gui_pos = self.calc_translation(&from);
+                // let gui_pos = self.calc_translation(&from);
                 if let Some((t, e)) = map.get(&from) {
                     let (new_x, new_y): (f32, f32) = self.calc_translation(&(to.x, to.y).into());
                     // println!(
@@ -62,7 +62,7 @@ impl Board {
                         // Add an Animator component to control and execute the animation.
                         .insert(Animator::new(tween));
                 } else {
-                    panic!("from coordinates not found")
+                    panic!("from coordinates not found {}", from)
                 }
             }
         }
