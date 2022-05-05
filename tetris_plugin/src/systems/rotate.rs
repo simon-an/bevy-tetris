@@ -18,21 +18,21 @@ pub(crate) fn update_block_sprites(
 
 pub(crate) fn rotate(
     _commands: Commands,
-    mut board: ResMut<Board>,
+    board: ResMut<Board>,
     mut map: ResMut<Map>,
-    mut shapeEntity: Option<ResMut<ShapeEntity>>,
+    shape_entity: Option<ResMut<ShapeEntity>>,
     mut rotate_event_rdr: EventReader<RotateEvent>,
     mut current_query: Query<(Entity, &mut Tetromino, &CurrentTetromino, &mut Transform)>,
 ) {
-    if let Some(mut shapeEntity) = shapeEntity {
+    if let Some(mut shape_entity) = shape_entity {
         for event in rotate_event_rdr.iter() {
-            let all_clear = board.is_free(&event); // TODO does not prevent panic in line 42
+            let all_clear = map.is_free(&event); // TODO does not prevent panic in line 42
             if all_clear {
                 let mut changes = vec![];
                 for (entity, _, _current, mut transform) in current_query.iter_mut() {
                     debug!("entity {:?}", entity);
                     let target: Option<(Coordinates, Tile)> =
-                        rotate_block(&entity, &event, &mut shapeEntity, &mut map);
+                        rotate_block(&entity, &event, &mut shape_entity, &mut map);
                     info!("rotation result {:?}", target);
                     if let Some((coordinate, tile)) = target {
                         update_block_sprites(&mut transform, &coordinate, &board);
@@ -160,4 +160,215 @@ pub(crate) fn rotate_block(
         .unwrap();
     Some((coords, tile))
     // }
+}
+
+#[cfg(test)]
+mod rotate_tests {
+    use std::collections::BTreeMap;
+
+    use super::*;
+    use crate::{Map, Matrix, Shape, ShapePosition, ShapeType, TileBlueprint, ToMap};
+    use bevy::prelude::Entity;
+    use bevy::winit::WinitPlugin;
+    use bevy::{render::settings::WgpuSettings, DefaultPlugins};
+    use bevy_egui::EguiPlugin;
+
+    #[test]
+    fn headless_mode() {
+        App::new()
+            .insert_resource(WgpuSettings {
+                backends: None,
+                ..Default::default()
+            })
+            .add_plugins_with(DefaultPlugins, |group| group.disable::<WinitPlugin>())
+            .add_plugin(EguiPlugin)
+            .update();
+    }
+
+    fn test_rotate(
+        input: Vec<&str>,
+        res: Vec<&str>,
+        position_on_board: Coordinates,
+        anker: Coordinates,
+        shape_type: ShapeType,
+        direction: RotateEvent,
+    ) {
+        let mut world = World::new();
+        let entity: Entity = world.spawn().id();
+        let e1: Entity = world.spawn().id();
+        let e2: Entity = world.spawn().id();
+        let e3: Entity = world.spawn().id();
+        let e4: Entity = world.spawn().id();
+
+        let shape = Shape::blueprint(shape_type);
+
+        let blocks = vec![e1, e2, e3, e4];
+        let positions = shape
+            .clone()
+            .positions
+            .into_iter()
+            .filter(|(_, b)| b == &TileBlueprint::CurrentTetromino)
+            .enumerate()
+            .map(|(i, (k, _))| (blocks[i], k))
+            .collect::<BTreeMap<Entity, ShapePosition>>();
+        let _entities = shape
+            .clone()
+            .positions
+            .into_iter()
+            .filter(|(_, b)| b == &TileBlueprint::CurrentTetromino)
+            .enumerate()
+            .map(|(i, (k, _))| (k, blocks[i]))
+            .collect::<BTreeMap<ShapePosition, Entity>>();
+
+        let mut map = Map::new(5, 5);
+        map.spawn(&shape, &(1, 1).into());
+        let input_map = input.to_map();
+        assert_eq!(input_map, map);
+
+        let res_coords: Map = res.to_map();
+        println!("res_coords: {}", res_coords);
+        let target = res_coords.get_current_shape_tile_coordinates();
+        let current = map.get_current_shape_tile_coordinates();
+        println!("target: {:?}", target);
+        println!("current: {:?}", current);
+        let mut coords = vec![];
+        let mut shape_entity = ShapeEntity::spawn(shape, &position_on_board, &mut world);
+        for i in 0..4 {
+            let block = blocks.get(i).unwrap();
+            if let Some((c1, t)) = rotate_block(block, &direction, &mut shape_entity, &mut map) {
+                println!("new coords: {} {}", c1, t);
+                // assert_eq!(
+                //     t,
+                //     // Tile::CurrentTetromino(ShapeType::get_color(&shape_type).into(), e1)
+                //     Tile::CurrentTetromino
+                // );
+                coords.push(c1);
+            } else {
+                let empty = positions.get(block).unwrap();
+                eprintln!("empty {:?}", empty)
+                //     let one_one_expected: ShapePosition = (1, 1).into();
+                //     assert_eq!(one_one, &one_one_expected);
+                //     coords.push((2, 2).into());
+            }
+            // assert!(target.contains(&c1));
+        }
+        coords.sort();
+        assert_eq!(coords, target);
+        println!("rotate coords: {:?}", coords);
+        println!("map: {}", map);
+        assert!(map.is_empty());
+        for coordinates in coords {
+            map.insert(coordinates, Tile::CurrentTetromino(shape_type.as_char()));
+        }
+        // let current = uut.get_current_shape_coordinates(); // includes empty coordinates
+        let current = map.get_current_shape_tile_coordinates();
+        assert_eq!(target, current);
+    }
+
+    #[test]
+    fn test_rotate_s_shape_cw() {
+        let input = vec!["xxxxx", "xxSSx", "xSSxx", "xxxxx", "xxxxx"];
+        let res = vec!["xxxxx", "xxSxx", "xxSSx", "xxxSx", "xxxxx"];
+        let position_on_board = Coordinates { x: 1, y: 1 };
+        let anker = Coordinates { x: 0, y: 0 };
+        test_rotate(
+            input,
+            res,
+            position_on_board,
+            anker,
+            ShapeType::S,
+            RotateEvent::ClockWise,
+        );
+    }
+    #[test]
+    fn test_rotate_s_shape_ccw() {
+        let input = vec!["xxxxx", "xxSSx", "xSSxx", "xxxxx", "xxxxx"];
+        let res = vec!["xxxxx", "xSxxx", "xSSxx", "xxSxx", "xxxxx"];
+        let position_on_board = Coordinates { x: 1, y: 1 };
+        let anker = Coordinates { x: 0, y: 0 };
+        test_rotate(
+            input,
+            res,
+            position_on_board,
+            anker,
+            ShapeType::S,
+            RotateEvent::CounterClockWise,
+        );
+    }
+
+    #[test]
+    fn test_rotate_z_shape_cw() {
+        let input = vec!["xxxxx", "xZZxx", "xxZZx", "xxxxx", "xxxxx"];
+        let res = vec!["xxxxx", "xxxZx", "xxZZx", "xxZxx", "xxxxx"];
+
+        let position_on_board = Coordinates { x: 1, y: 1 };
+        let anker = Coordinates { x: 0, y: 0 };
+        test_rotate(
+            input,
+            res,
+            position_on_board,
+            anker,
+            ShapeType::Z,
+            RotateEvent::ClockWise,
+        );
+    }
+    #[test]
+    fn test_rotate_z_shape_ccw() {
+        let input = vec!["xxxxx", "xZZxx", "xxZZx", "xxxxx", "xxxxx"];
+        let res = vec!["xxxxx", "xxZxx", "xZZxx", "xZxxx", "xxxxx"];
+
+        let position_on_board = Coordinates { x: 1, y: 1 };
+        let anker = Coordinates { x: 0, y: 0 };
+        test_rotate(
+            input,
+            res,
+            position_on_board,
+            anker,
+            ShapeType::Z,
+            RotateEvent::CounterClockWise,
+        );
+    }
+    #[test]
+    fn test_rotate_t_shape_cw() {
+        let input = vec!["xxxxx", "xTxxx", "xTTxx", "xTxxx", "xxxxx"];
+        let res = vec!["xxxxx", "xTTTx", "xxTxx", "xxxxx", "xxxxx"];
+
+        let position_on_board = Coordinates { x: 1, y: 1 };
+        let anker = Coordinates { x: 0, y: 0 };
+        test_rotate(
+            input,
+            res,
+            position_on_board,
+            anker,
+            ShapeType::T,
+            RotateEvent::ClockWise,
+        );
+    }
+    #[test]
+    fn test_rotate_t_shape_ccw() {
+        let input = vec!["xxxxx", "xTxxx", "xTTxx", "xTxxx", "xxxxx"];
+        let res = vec!["xxxxx", "xxxxx", "xxTxx", "xTTTx", "xxxxx"];
+        let position_on_board = Coordinates { x: 1, y: 1 };
+        let anker = Coordinates { x: 0, y: 0 };
+        test_rotate(
+            input,
+            res,
+            position_on_board,
+            anker,
+            ShapeType::T,
+            RotateEvent::CounterClockWise,
+        );
+    }
+    #[test]
+    fn test_is_free() {
+        let mut world = World::new();
+        let entity: Entity = world.spawn().id();
+        let shape = Shape::blueprint(ShapeType::L);
+
+        let position_on_board = Coordinates { x: 1, y: 1 };
+        let mut uut = Map::new(5, 5);
+        uut.spawn(&shape, &position_on_board);
+        let _shapee = ShapeEntity::spawn(shape, &position_on_board, &mut world);
+        assert!(uut.is_free(&RotateEvent::ClockWise));
+    }
 }

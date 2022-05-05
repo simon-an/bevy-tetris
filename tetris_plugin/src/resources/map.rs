@@ -1,8 +1,8 @@
 use std::{collections::BTreeMap, fmt::Display};
 
 use crate::{
-    components::Matrix, events::MoveEvent, Coordinates, Shape, ShapeEntity, ShapeType, Tile,
-    TileBlueprint, Transitions,
+    components::Matrix, events::MoveEvent, Coordinates, RotateEvent, Shape, ShapeEntity, ShapeType,
+    Tile, TileBlueprint, Transitions,
 };
 
 pub type MapTile = Tile;
@@ -402,6 +402,87 @@ impl Map {
             }),
             _ => Err(()),
         }
+    }
+    /// only call this if board has a shape
+    pub fn is_free(&self, direction: &RotateEvent) -> bool {
+        // if let Some(shape) = &self.current_tetromino_shape {
+        //     enum Check {
+        //         W,
+        //         S,
+        //         O,
+        //         N,
+        //         Inner,
+        //     }
+        //     let target = if shape.layout.width == shape.layout.height {
+        //         (Check::Inner, None, 0)
+        //     } else if shape.layout.width > shape.layout.height {
+        //         if direction == RotateEvent::ClockWise {
+        //             // xxxx      xoox
+        //             // xooo =>   xoox
+        //             // xooo      xoox
+        //             (Check::N, None, shape.layout.width - shape.layout.height)
+        //         } else {
+        //             // xooo =>   ooxx
+        //             // xooo      ooxx
+        //             // xxxx      ooxx
+        //             (
+        //                 Check::S,
+        //                 Some(Check::W),
+        //                 shape.layout.width - shape.layout.height,
+        //             )
+        //         }
+        //     } else {
+        //         if direction == RotateEvent::ClockWise {
+        //             // xxoo      ooox
+        //             // xxoo =>   ooox
+        //             // xxoo      xxxx
+        //             (Check::W, None, shape.layout.height - shape.layout.width)
+        //         } else {
+        //             // xoox      xooo
+        //             // xoox =>   xooo
+        //             // xoox      xxxx
+        //             (Check::O, None, shape.layout.height - shape.layout.width)
+        //         }
+        //     };
+
+        //     match target {
+        //         (Check::Inner, _, _) => {
+        //             for c in self.get_current_shape_coordinates() {
+        //                 if let Some(x) = self.map.get(&(*c + shape.anker + shape.position_on_board))
+        //                 {
+        //                     if let Tile::Block = x {
+        //                         return false; // Collision
+        //                     } else {
+        //                         continue;
+        //                     }
+        //                 } else {
+        //                     return false; // out of bounds
+        //                 }
+        //             }
+        //         }
+        //         (compass, _, diff) => {
+        //             let count = diff
+        //                 * match compass {
+        //                     Check::N => -1 ,
+        //                     Check::O,
+        //                     _ => 0
+        //                 };
+        //             for c in 0..count {
+        //                 if let Some(t) = self.map.get(&(*c + shape.anker + shape.position_on_board))
+        //                 {
+        //                     if let Tile::Block = t {
+        //                         return false; // Collision
+        //                     } else {
+        //                         continue;
+        //                     }
+        //                 } else {
+        //                     return false; // out of bounds
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        true
     }
 }
 
@@ -806,8 +887,9 @@ mod tests {
             include_str!("../../test_resources/move_blocks_down_result.txt").to_string(),
         );
 
-        let res = map.move_blocks_above_empty_lines();
-        assert_eq!(Some(vec![20u16]), res);
+        let (lines, t) = map.move_blocks_above_empty_lines().unwrap();
+        assert_eq!(vec![20u16], lines);
+        assert_eq!(vec![((0, 0).into(), (0, 0).into())], t.0);
         // println!("{}", expected.to_string());
         assert_eq!(map, expected);
     }
