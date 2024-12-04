@@ -1,7 +1,8 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_egui::{egui, EguiContext};
+use states::GameStatus;
 
-use crate::AppState;
+use crate::{audio::Volume, AppState};
 use tetris_plugin::{BoardOptions, Score, TileSize};
 
 pub struct Images {
@@ -18,9 +19,11 @@ impl FromWorld for Images {
 }
 
 pub fn ui_example(
-    mut egui_ctx: ResMut<EguiContext>,
+    mut egui_ctx: Query<&mut EguiContext, With<PrimaryWindow>>,
     app_state: Res<State<AppState>>,
+    game_state: Option<Res<State<GameStatus>>>,
     mut options: ResMut<BoardOptions>,
+    mut volume: ResMut<Volume>,
     score: Option<Res<Score>>,
     // board_assets: Res<BoardAsset>
 
@@ -38,75 +41,75 @@ pub fn ui_example(
 ) {
     if !*is_initialized {
         *is_initialized = true;
-        *rendered_texture_id = egui_ctx.add_image(images.bevy_icon.clone_weak());
+        // *rendered_texture_id = egui_ctx.add_image(images.bevy_icon.clone_weak());
         *adaptive_tile = true;
         *tile_size = 50.0;
     }
 
-    egui::SidePanel::left("side_panel")
-        .default_width(200.0)
-        .show(egui_ctx.ctx_mut(), |ui| {
-            ui.heading("Score");
-            if let Some(score) = score {
-                ui.heading(score.0.to_string());
-            } else {
-                ui.heading("no score");
-            }
-
-            ui.allocate_space(egui::Vec2::new(200.0, 20.0));
-            ui.heading("Status");
-
-            ui.vertical(|ui| {
-                ui.label(format!("App State: {}", app_state.current().to_string()));
-                // ui.text_edit_singleline(&mut ui_state.label);
-            });
-
-            ui.allocate_space(egui::Vec2::new(200.0, 20.0));
-            ui.vertical(|ui| {
-                ui.heading("Options");
-                ui.label("Position:");
-                ui.label(format!("{:?}", options.position));
-                ui.allocate_space(egui::Vec2::new(1.0, 10.0));
-                ui.label("Map Size:");
-                ui.add(egui::Slider::new(&mut options.map_size.0, 6..=15).text("width"));
-                ui.add(egui::Slider::new(&mut options.map_size.1, 10..=25).text("height"));
-
-                ui.allocate_space(egui::Vec2::new(1.0, 10.0));
-                ui.label("Tile Padding");
-                ui.label(format!("{:?}", options.tile_padding));
-                ui.allocate_space(egui::Vec2::new(1.0, 10.0));
-                ui.label("Tile Size");
-                ui.label(format!("{:?}", options.tile_size));
-                ui.checkbox(&mut *adaptive_tile, "Adaptive");
-                options.tile_size = if *adaptive_tile == true {
-                    TileSize::Adaptive {
-                        min: 10.0,
-                        max: *tile_size,
-                    }
+    if let Ok(mut ctx) = egui_ctx.get_single_mut() {
+        let ctx = ctx.get_mut();
+        egui::SidePanel::left("side_panel")
+            .default_width(200.0)
+            .show(ctx, |ui| {
+                ui.heading("Score");
+                if let Some(score) = score {
+                    ui.heading(score.0.to_string());
                 } else {
-                    TileSize::Fixed(*tile_size)
-                };
-                ui.add(egui::Slider::new(&mut *tile_size, 10.0..=50.0).text("tile_size_max"));
+                    ui.heading("no score");
+                }
+
+                ui.separator();
+                ui.heading("Audio");
+                ui.add(egui::Slider::new(&mut volume.0, 0.0..=2.0).text("volume"));
+
+                ui.separator();
+                ui.heading("Status");
+
+                ui.vertical(|ui| {
+                    ui.label(format!("App State: {}", app_state.get().to_string()));
+                    // ui.text_edit_singleline(&mut ui_state.label);
+                });
+                if let Some(game_ste) = game_state {
+                    ui.vertical(|ui| {
+                        ui.label(format!("Game State: {}", game_ste.get().to_string()));
+                        // ui.text_edit_singleline(&mut ui_state.label);
+                    });
+                }
+
+                ui.separator();
+                ui.vertical(|ui| {
+                    ui.heading("Options");
+                    ui.label("Position:");
+                    ui.label(format!("{:?}", options.position));
+                    ui.separator();
+                    ui.label("Map Size:");
+                    ui.add(egui::Slider::new(&mut options.map_size.0, 6..=15).text("width"));
+                    ui.add(egui::Slider::new(&mut options.map_size.1, 10..=25).text("height"));
+
+                    ui.separator();
+                    ui.label("Tile Padding");
+                    ui.label(format!("{:?}", options.tile_padding));
+                    ui.allocate_space(egui::Vec2::new(1.0, 10.0));
+                    ui.label("Tile Size");
+                    ui.label(format!("{:?}", options.tile_size));
+                    ui.checkbox(&mut *adaptive_tile, "Adaptive");
+                    options.tile_size = if *adaptive_tile == true {
+                        TileSize::Adaptive {
+                            min: 10.0,
+                            max: *tile_size,
+                        }
+                    } else {
+                        TileSize::Fixed(*tile_size)
+                    };
+                    ui.add(egui::Slider::new(&mut *tile_size, 10.0..=50.0).text("tile_size_max"));
+                });
+
+                ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
+                    ui.add(egui::Hyperlink::from_label_and_url(
+                        "powered by egui",
+                        "https://github.com/emilk/egui/",
+                    ));
+                });
             });
-
-            // ui.allocate_space(egui::Vec2::new(1.0, 100.0));
-            // ui.horizontal(|ui| {
-            //     load = ui.button("Load").clicked();
-            //     invert = ui.button("Invert").clicked();
-            //     remove = ui.button("Remove").clicked();
-            // });
-
-            // ui.add(egui::widgets::Image::new(
-            //     // egui::TextureId::User(BEVY_TEXTURE_ID),
-            //     *rendered_texture_id,
-            //     [256.0, 256.0],
-            // ));
-
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
-                ui.add(egui::Hyperlink::from_label_and_url(
-                    "powered by egui",
-                    "https://github.com/emilk/egui/",
-                ));
-            });
-        });
+    }
 }

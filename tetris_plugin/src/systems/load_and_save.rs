@@ -3,18 +3,18 @@ use std::{
     io::{Read, Write},
 };
 
-use bevy::{ecs::schedule::StateData, prelude::*};
+use bevy::prelude::*;
 
 use crate::{Board, GameCommand, Map, Transitions};
 
 pub(crate) fn load_and_save_warning(mut game_command: EventReader<crate::GameCommand>) {
-    for event in game_command.iter() {
+    for event in game_command.read() {
         if event == &GameCommand::Save || event == &GameCommand::Load {
             warn!("load and save is only active when game is paused");
         }
     }
 }
-pub(crate) fn load_and_save<T>(
+pub(crate) fn load_and_save(
     mut commands: Commands,
     board: Res<Board>,
     map: Res<Map>,
@@ -23,11 +23,9 @@ pub(crate) fn load_and_save<T>(
     mut game_command: EventReader<crate::GameCommand>,
     // mut state: ResMut<State<T>>,
     // pause_state: ResMut<T>,
-) where
-    T: StateData + Send + Sync,
-{
+) {
     let file = "save.txt";
-    for event in game_command.iter() {
+    for event in game_command.read() {
         // state.set(pause_state.clone()).unwrap();
         let mut file = OpenOptions::new()
             .create(true)

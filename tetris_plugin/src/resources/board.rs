@@ -2,7 +2,7 @@ use crate::Bounds2;
 use crate::Coordinates;
 use bevy::prelude::*;
 
-#[derive(Debug)]
+#[derive(Debug, Resource)]
 pub(crate) struct Board {
     pub bounds: Bounds2,
     pub tile_size: f32,

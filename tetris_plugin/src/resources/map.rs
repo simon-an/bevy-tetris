@@ -1,5 +1,7 @@
 use std::{collections::BTreeMap, fmt::Display};
 
+use bevy::prelude::Resource;
+
 use crate::{
     components::Matrix, events::MoveEvent, Coordinates, RotateEvent, Shape, ShapeEntity, ShapeType,
     Tile, TileBlueprint, Transitions,
@@ -7,7 +9,7 @@ use crate::{
 
 pub type MapTile = Tile;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Resource)]
 pub(crate) struct Map {
     pub(crate) inner: BTreeMap<Coordinates, MapTile>,
     pub width: usize,
@@ -67,7 +69,7 @@ impl Map {
         self.inner.get(coordinates)
     }
 
-    pub fn get_current_shape(&self) -> Vec<(Coordinates, Tile)> {
+    fn get_current_shape(&self) -> Vec<(Coordinates, Tile)> {
         self.inner
             .iter()
             .filter(|(_, t)| t.is_moveable()) // returns empty as well???
@@ -397,7 +399,6 @@ impl Map {
                 anker: (0, 0).into(),
                 layout: m,
                 position_on_board: (bounds.min_x, bounds.min_y).into(),
-                positions: BTreeMap::default(),
                 shape_type: ShapeType::from_char(c),
             }),
             _ => Err(()),

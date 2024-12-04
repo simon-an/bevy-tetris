@@ -2,7 +2,8 @@ use bevy::prelude::*;
 
 use crate::{
     components::Block, update_block_sprites, utils::move_block, Board, CollisionDetection,
-    Coordinates, CurrentTetromino, Map, MoveEvent, ShapeEntity, SpawnEvent, Tetromino, Tile,
+    Coordinates, CurrentTetromino, Map, MoveEvent, ShapeEntity, ShapePosition, SpawnEvent,
+    Tetromino, Tile,
 };
 
 pub(crate) fn gogo(
@@ -16,21 +17,21 @@ pub(crate) fn gogo(
         &mut Tetromino,
         &CurrentTetromino,
         &Coordinates,
+        &mut ShapePosition,
         &mut Transform,
     )>, // TODO: Remove coodinates as component. only part of board
     mut spawn_ewr: EventWriter<SpawnEvent>,
 ) {
-    for event in move_event_rdr.iter() {
+    for event in move_event_rdr.read() {
         if let Some(shape) = shape.as_deref_mut() {
-            let vec: Vec<(Entity, Mut<Tetromino>, &CurrentTetromino, &Coordinates, _)> =
-                current_query.iter_mut().collect();
+            let vec: Vec<(_, _, _, _, _, _)> = current_query.iter_mut().collect();
 
             let collision = map.detect_move_collision(event);
             debug!("Collition {:?}", collision);
 
             if let Some(CollisionDetection::Bottom | CollisionDetection::Block) = collision {
                 let shape_as_char = shape.shape_type.as_char();
-                for (entity, _, _current, coordinates, _) in vec.into_iter() {
+                for (entity, _, _current, coordinates, _, _) in vec.into_iter() {
                     commands.entity(entity).remove::<CurrentTetromino>();
                     commands.entity(entity).remove::<Tetromino>();
                     let _tile = map
@@ -47,10 +48,10 @@ pub(crate) fn gogo(
             }
 
             let mut changes = vec![];
-            for (entity, _, _current, _coordinates, mut transform) in vec.into_iter() {
+            for (entity, _, _current, _coordinates, mut pos, mut transform) in vec.into_iter() {
                 debug!("entity {:?}", entity);
                 let target: Option<(Coordinates, Tile)> =
-                    match move_block(&entity, &event, &shape, &mut map) {
+                    match move_block(&entity, &event, &shape, &mut pos, &mut map) {
                         Ok(target) => target,
                         Err(e) => {
                             error!("moving block failed {}", e);

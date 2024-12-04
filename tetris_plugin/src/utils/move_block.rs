@@ -6,21 +6,10 @@ pub(crate) fn move_block(
     e: &Entity,
     event: &MoveEvent,
     shape: &ShapeEntity,
+    pos: &ShapePosition,
     map: &mut Map,
 ) -> Result<Option<(Coordinates, Tile)>, String> {
-    // if let ShapeEntity {
-    //     anker,
-    //     position_on_board,
-    //     positions,
-    //     ..
-    // } = &mut shape
-    // {
     debug!("move entity: {:?}", e);
-    let pos = shape.positions.get(e);
-    if pos.is_none() {
-        return Err("enitity not found".to_string());
-    }
-    let pos = pos.unwrap();
     let mut coords = shape.position_on_board.clone() - shape.anker.clone() + pos.clone();
     let tile = map.insert(coords, Tile::Empty);
     if tile.is_none() {
@@ -40,7 +29,4 @@ pub(crate) fn move_block(
         }
     };
     Ok(Some((coords, tile)))
-    // } else {
-    //     Ok(None)
-    // }
 }

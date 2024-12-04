@@ -2,20 +2,21 @@ use bevy::prelude::*;
 
 use crate::{
     components::Block, update_block_sprites, Board, CollisionDetection, Coordinates,
-    CurrentTetromino, Map, ShapeEntity, SpawnEvent, Tetromino, TickEvent, Tile,
+    CurrentTetromino, Map, ShapeEntity, ShapePosition, SpawnEvent, Tetromino, Tick, Tile,
 };
 
 pub(crate) fn tock(
     mut commands: Commands,
     mut board: ResMut<Board>,
     mut map: ResMut<Map>,
-    timer: Res<TickEvent>,
+    timer: Res<Tick>,
     mut shape: Option<ResMut<ShapeEntity>>,
     mut current_query: Query<(
         Entity,
         &mut Tetromino,
         &CurrentTetromino,
         &Coordinates,
+        &mut ShapePosition,
         &mut Transform,
     )>,
     mut spawn_ewr: EventWriter<SpawnEvent>,
@@ -24,8 +25,7 @@ pub(crate) fn tock(
         if let Some(mut shape) = shape {
             #[cfg(feature = "debug")]
             bevy::log::info!("{}", (*board).console_output());
-            let vec: Vec<(Entity, Mut<Tetromino>, &CurrentTetromino, &Coordinates, _)> =
-                current_query.iter_mut().collect();
+            let vec: Vec<(Entity, _, _, _, _, _)> = current_query.iter_mut().collect();
 
             let collisions = map.detect_collision();
             debug!("Collition {:?}", collisions);
@@ -38,7 +38,7 @@ pub(crate) fn tock(
             ) = collisions
             {
                 let c = shape.shape_type.as_char();
-                for (entity, _, _current, coordinates, _) in vec.into_iter() {
+                for (entity, _, _current, coordinates, _, _) in vec.into_iter() {
                     commands.entity(entity).remove::<CurrentTetromino>();
                     commands.entity(entity).remove::<Tetromino>();
                     let _tile = map
@@ -53,10 +53,15 @@ pub(crate) fn tock(
             }
 
             let mut changes = vec![];
-            for (entity, _, _current, _coordinates, mut transform) in vec.into_iter() {
-                let target: Option<(Coordinates, Tile)> =
-                    crate::utils::move_block(&entity, &crate::MoveEvent::Down, &shape, &mut map)
-                        .expect("block must move");
+            for (entity, _, _current, _coordinates, mut pos, mut transform) in vec.into_iter() {
+                let target: Option<(Coordinates, Tile)> = crate::utils::move_block(
+                    &entity,
+                    &crate::MoveEvent::Down,
+                    &shape,
+                    &mut pos,
+                    &mut map,
+                )
+                .expect("block must move");
                 debug!("move result {:?}", target);
                 if let Some((coordinate, tile)) = target {
                     update_block_sprites(&mut transform, &coordinate, &board);

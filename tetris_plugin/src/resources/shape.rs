@@ -4,14 +4,14 @@ use std::{
     fmt::{Display, Formatter},
 };
 
-use bevy::prelude::{trace, warn, Color, Entity};
+use bevy::prelude::{trace, warn, Color, Component, Resource};
 use rand::{distributions::Standard, prelude::Distribution, Rng};
 
 use crate::{Coordinates, Matrix, MoveEvent, TileBlueprint};
 
 // Holds a block's position within a tetromino for rotation
 #[cfg_attr(feature = "debug", derive(bevy_inspector_egui::Inspectable))]
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Copy, Component)]
 pub struct ShapePosition {
     pub x: i16,
     pub y: i16,
@@ -39,10 +39,10 @@ impl PartialEq<(i16, i16)> for ShapePosition {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Resource)]
 pub struct ShapeEntity {
     pub shape_type: ShapeType,
-    pub positions: BTreeMap<Entity, ShapePosition>,
+    // pub positions: BTreeMap<Entity, ShapePosition>,
     // pub positions: HashMap<ShapePosition, Option<Entity>>, // this would allow a shape without a entity
     // pub positions: HashMap<ShapePosition, Option<Entity>>, // this would allow a shape without a entity
     pub anker: Coordinates, // Should be the top left corner
@@ -61,8 +61,8 @@ impl Display for Shape {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "({}, {}, (h: {},w: {}), {:?})",
-            self.shape_type, self.anker, self.layout.height, self.layout.width, self.positions
+            "({}, {}, (h: {},w: {}))",
+            self.shape_type, self.anker, self.layout.height, self.layout.width
         )
     }
 }
@@ -95,54 +95,53 @@ impl ShapeEntity {
         trace!("shape has moved from {} to {}", old, self.position_on_board);
     }
 
-    pub fn get_positions(&self) -> Vec<&ShapePosition> {
-        self.positions.values().collect()
-    }
-
     #[cfg(test)]
     pub fn spawn(shape: Shape, position_on_board: &Coordinates, world: &mut World) -> Self {
+        use bevy::prelude::Entity;
+
+        use crate::components::Block;
+
         let Shape {
             anker,
             layout,
             positions,
             shape_type,
         } = shape;
-        let positions = positions
+        let positions: BTreeMap<Entity, ShapePosition> = positions
             .into_iter()
-            .map(|(pos, _blueprint)| (world.spawn().id(), pos))
+            .map(|(pos, _blueprint)| (world.spawn((Block, pos)).id(), pos))
             .collect();
         Self {
             anker,
             layout,
-            positions,
             shape_type,
             position_on_board: position_on_board.clone(),
         }
     }
-    pub fn is_y_i(&self) -> bool {
-        assert_eq!(self.shape_type, ShapeType::I);
-        assert_eq!(self.positions.len(), 4);
-        let positions: Vec<&ShapePosition> = self.positions.values().collect();
-        positions[0].x == 0 && positions[1].x == 0 && positions[2].x == 0 && positions[3].x == 0
-    }
-    pub fn is_x_i(&self) -> bool {
-        assert_eq!(self.shape_type, ShapeType::I);
-        let positions: Vec<&ShapePosition> = self.positions.values().collect();
-        assert_eq!(positions.len(), 4);
-        positions[0].y == 0 && positions[1].x == 0 && positions[2].x == 0 && positions[3].x == 0
-    }
-    pub fn is_block(&self, c: Coordinates) -> Option<ShapePosition> {
-        self.positions
-            .values()
-            .find(|p| (c - (self.anker + **p)) == self.position_on_board)
-            .map(|p| p.clone())
-    }
-    pub fn reflect(&self, c: Coordinates) -> Option<ShapePosition> {
-        self.positions
-            .values()
-            .find(|p| (c - (self.anker + **p)) == self.position_on_board)
-            .map(|s| s.clone())
-    }
+    // pub fn is_y_i(&self) -> bool {
+    //     assert_eq!(self.shape_type, ShapeType::I);
+    //     assert_eq!(positions.len(), 4);
+    //     let positions: Vec<&ShapePosition> = positions.values().collect();
+    //     positions[0].x == 0 && positions[1].x == 0 && positions[2].x == 0 && positions[3].x == 0
+    // }
+    // pub fn is_x_i(&self) -> bool {
+    //     assert_eq!(self.shape_type, ShapeType::I);
+    //     let positions: Vec<&ShapePosition> = positions.values().collect();
+    //     assert_eq!(positions.len(), 4);
+    //     positions[0].y == 0 && positions[1].x == 0 && positions[2].x == 0 && positions[3].x == 0
+    // }
+    // pub fn is_block(&self, c: Coordinates) -> Option<ShapePosition> {
+    //     positions
+    //         .values()
+    //         .find(|p| (c - (self.anker + **p)) == self.position_on_board)
+    //         .map(|p| p.clone())
+    // }
+    // pub fn reflect(&self, c: Coordinates) -> Option<ShapePosition> {
+    //     positions
+    //         .values()
+    //         .find(|p| (c - (self.anker + **p)) == self.position_on_board)
+    //         .map(|s| s.clone())
+    // }
 }
 
 #[cfg_attr(feature = "debug", derive(bevy_inspector_egui::Inspectable))]
@@ -217,6 +216,10 @@ impl ShapeType {
 impl Shape {
     pub fn blueprint(shape_type: ShapeType) -> Shape {
         Shape::blueprints().remove(shape_type as usize)
+    }
+
+    pub fn initial_occupied(&self) -> Vec<&ShapePosition> {
+        self.positions.keys().collect()
     }
 
     fn blueprints() -> Vec<Shape> {

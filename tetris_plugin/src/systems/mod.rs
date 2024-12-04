@@ -15,7 +15,7 @@ pub(crate) use load_and_save::*;
 mod engine;
 pub(crate) use engine::*;
 mod animate_line_del;
-pub(crate) use animate_line_del::animate;
+// pub(crate) use animate_line_del::animate;
 
 #[cfg(not(feature = "debug"))]
 pub(crate) fn spawn_debug_block() {}

@@ -11,7 +11,7 @@ use bevy::prelude::*;
 //     }
 // }
 pub(crate) fn score(mut score: ResMut<Score>, mut event: EventReader<ScoreEvent>) {
-    for e in event.iter() {
+    for e in event.read() {
         *score += *e;
     }
 }

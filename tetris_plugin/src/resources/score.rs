@@ -1,7 +1,10 @@
 use std::ops::AddAssign;
 
+use bevy::prelude::Resource;
+
 use crate::ScoreEvent;
 
+#[derive(Resource)]
 pub struct Score(pub u64);
 
 impl AddAssign<ScoreEvent> for Score {

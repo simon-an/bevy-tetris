@@ -16,5 +16,5 @@ pub(crate) use map::*;
 mod map;
 pub(crate) use transitions::*;
 mod transitions;
-pub(crate) use popup::{PopupRef, PopupText};
+pub(crate) use popup::{PopupText};
 mod popup;
