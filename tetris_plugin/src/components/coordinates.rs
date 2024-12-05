@@ -3,13 +3,21 @@ use bevy::prelude::Component;
 use std::cmp::Ordering;
 use std::fmt::{self, Display, Formatter};
 use std::ops::{Add, Range, Sub};
-
+#[cfg(feature = "debug")]
+use bevy::reflect::Reflect;
+#[cfg(feature = "debug")]
+use bevy_inspector_egui::InspectorOptions;
+#[cfg(feature = "debug")]
+use bevy_inspector_egui::prelude::ReflectInspectorOptions;
 use crate::ShapePosition;
 
-#[cfg_attr(feature = "debug", derive(bevy_inspector_egui::Inspectable))]
+#[cfg_attr(feature = "debug", derive(InspectorOptions, Reflect))]
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Hash, Component)]
+#[cfg_attr(feature = "debug", reflect(InspectorOptions))]
 pub struct Coordinates {
+    #[cfg_attr(feature = "debug", inspector(min = 10, max = 70))]
     pub x: u16,
+    #[cfg_attr(feature = "debug", inspector(min = 10, max = 70))]
     pub y: u16,
 }
 

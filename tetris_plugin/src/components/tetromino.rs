@@ -4,8 +4,8 @@ use crate::{Shape, ShapePosition, ShapeType, TileBlueprint};
 
 // A block can be part of a tetromino. Stores the block's index within that
 // tetromino for the purpose of rotation.
-#[cfg_attr(feature = "debug", derive(bevy_inspector_egui::Inspectable))]
-#[derive(Debug, Component, Clone)]
+#[cfg_attr(feature = "debug", derive(Reflect))]
+#[derive(Debug, Component, Clone, Resource)]
 pub struct Tetromino {
     pub color: Color,
     pub tetromino_type: ShapeType,

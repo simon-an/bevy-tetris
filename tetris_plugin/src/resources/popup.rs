@@ -1,4 +1,5 @@
-use bevy::prelude::Entity;
+use bevy::prelude::*;
 
+#[derive(Resource)]
 pub struct PopupText(pub String);
-pub struct PopupRef(pub Entity);
+

@@ -9,51 +9,46 @@ pub use demo::movement;
 #[cfg(feature = "demo")]
 pub use demo::setup_game;
 
-#[derive(Debug)]
-pub struct MenuData {
-    button_entity: Entity,
-}
-
-#[cfg_attr(feature = "debug", derive(bevy_inspector_egui::Inspectable))]
-#[derive(Component, Debug, Default, Clone, Copy, Reflect)]
-#[reflect(Component)]
+#[cfg_attr(feature = "debug", derive(Reflect))]
+#[derive(Component, Debug, Default, Clone, Copy)]
+#[cfg_attr(feature = "debug", reflect(Component))]
 pub struct MenuComponent;
 
-const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
-const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
+const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
+const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
+const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
 
 pub fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
     // ui camera
     // commands.spawn_bundle(UiCameraBundle::default());
-    let button_entity = commands
-        .spawn_bundle(ButtonBundle {
-            style: Style {
-                size: Size::new(Val::Px(150.0), Val::Px(65.0)),
+    let _button_entity = commands
+        .spawn((
+            Button,
+            Node {
+                width: Val::Px(150.0),
+                height: Val::Px(65.0),
                 // center button
-                margin: Rect::all(Val::Auto),
+                margin: UiRect::all(Val::Auto),
                 // horizontally center child text
                 justify_content: JustifyContent::Center,
                 // vertically center child text
                 align_items: AlignItems::Center,
                 ..default()
             },
-            color: NORMAL_BUTTON.into(),
-            ..default()
-        })
+            BorderColor(Color::BLACK),
+            BorderRadius::MAX,
+            BackgroundColor(NORMAL_BUTTON),
+        ))
         .with_children(|parent| {
-            parent.spawn_bundle(TextBundle {
-                text: Text::with_section(
-                    "Play",
-                    TextStyle {
-                        font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                        font_size: 40.0,
-                        color: Color::rgb(0.9, 0.9, 0.9),
-                    },
-                    Default::default(),
-                ),
-                ..default()
-            });
+            parent.spawn((
+                Text::new("Play"),
+                TextFont {
+                    font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                    font_size: 40.0,
+                    ..default()
+                },
+                TextColor(Color::srgb(0.9, 0.9, 0.9)),
+            ));
         })
         .insert(MenuComponent)
         .id();
@@ -62,24 +57,29 @@ pub fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 pub fn menu(
-    mut state: ResMut<State<AppState>>,
+    mut state: ResMut<NextState<AppState>>,
     mut interaction_query: Query<
-        (&Interaction, &mut UiColor),
+    (
+        &Interaction,
+        &mut BackgroundColor,
+        &mut BorderColor,
+        &Children,
+    ),
         (Changed<Interaction>, With<Button>),
     >,
 ) {
-    for (interaction, mut color) in interaction_query.iter_mut() {
+    for (interaction, mut background, mut _border, _children) in interaction_query.iter_mut() {
         match *interaction {
-            Interaction::Clicked => {
-                *color = PRESSED_BUTTON.into();
+            Interaction::Pressed => {
+                *background = PRESSED_BUTTON.into();
                 println!("SET INGAME STATE");
-                state.set(AppState::InGame).unwrap();
+                state.set(AppState::InGame);
             }
             Interaction::Hovered => {
-                *color = HOVERED_BUTTON.into();
+                *background = HOVERED_BUTTON.into();
             }
             Interaction::None => {
-                *color = NORMAL_BUTTON.into();
+                *background = NORMAL_BUTTON.into();
             }
         }
     }

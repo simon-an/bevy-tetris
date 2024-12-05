@@ -1,18 +1,20 @@
 use std::{collections::BTreeMap, fmt::Display};
 
+use bevy::prelude::Resource;
+
 use crate::{
-    components::Matrix, events::MoveEvent, Coordinates, Shape, ShapeEntity, ShapeType, Tile,
-    TileBlueprint,
+    components::Matrix, events::MoveEvent, Coordinates, RotateEvent, Shape, ShapeEntity, ShapeType,
+    Tile, TileBlueprint, Transitions,
 };
 
 pub type MapTile = Tile;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Resource)]
 pub(crate) struct Map {
     pub(crate) inner: BTreeMap<Coordinates, MapTile>,
     pub width: usize,
     pub height: usize,
-    pub transitions: Option<Vec<(Coordinates, Coordinates)>>,
+    // pub transitions: Option<Vec<(Coordinates, Coordinates)>>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
@@ -27,7 +29,6 @@ impl Map {
         let inner: BTreeMap<Coordinates, MapTile> = Map::create_tiles(width, height);
 
         Self {
-            transitions: None,
             inner,
             width,
             height,
@@ -68,7 +69,7 @@ impl Map {
         self.inner.get(coordinates)
     }
 
-    pub fn get_current_shape(&self) -> Vec<(Coordinates, Tile)> {
+    fn get_current_shape(&self) -> Vec<(Coordinates, Tile)> {
         self.inner
             .iter()
             .filter(|(_, t)| t.is_moveable()) // returns empty as well???
@@ -165,7 +166,6 @@ impl Map {
     }
     pub fn empty_square(width: u16) -> Self {
         Self {
-            transitions: None,
             inner: Coordinates::from_u16_range(0..width)
                 .map(|c| (c, MapTile::Empty))
                 .collect::<BTreeMap<Coordinates, MapTile>>(),
@@ -175,7 +175,6 @@ impl Map {
     }
     pub fn empty_rect(width: usize, height: usize) -> Self {
         Self {
-            transitions: None,
             inner: Coordinates::from_size(width, height)
                 .map(|c| (c, MapTile::Empty))
                 .collect::<BTreeMap<Coordinates, MapTile>>(),
@@ -245,19 +244,12 @@ impl Map {
             });
     }
 
-    pub(crate) fn set_lines_to_empty(&mut self, mut lines: Vec<u16>) -> Vec<Coordinates> {
-        // SORT LINES REV
-        lines.sort();
-        // lines.reverse();
+    pub(crate) fn set_lines_to_empty(&mut self, lines: Vec<u16>) -> Vec<Coordinates> {
+        println!("set_lines_to_empty {:?}", lines);
         let mut delted_blocks: Vec<Coordinates> = vec![];
-        let mut removed_lines = 0;
         for i in lines.clone() {
-            let line_index = i + removed_lines;
-            let mut r = self.set_line_to_empty(line_index);
+            let mut r = self.set_line_to_empty(i);
             delted_blocks.append(&mut r);
-            // move all lines down
-
-            removed_lines += 1;
         }
         delted_blocks
     }
@@ -291,7 +283,7 @@ impl Map {
         return count == self.width;
     }
 
-    pub fn move_blocks_above_empty_lines(&mut self) -> Option<Vec<u16>> {
+    pub fn move_blocks_above_empty_lines(&mut self) -> Option<(Vec<u16>, Transitions)> {
         let mut lines_with_blocks = vec![];
         let mut lines_without_blocks = vec![];
         for (c, t) in self.inner.iter() {
@@ -307,30 +299,37 @@ impl Map {
             }
         }
 
-        let mut lines_to_move = vec![];
+        let mut lines_tuppels_old = vec![];
+        let mut lines_to_delete = vec![];
         for y1 in &lines_with_blocks {
             for y2 in &lines_without_blocks.clone() {
                 if y1 < y2 {
-                    lines_to_move.push((y1.clone(), y2.clone()));
+                    lines_tuppels_old.push((y1.clone(), y2.clone()));
+                    lines_to_delete.push(y2.clone());
                 }
             }
         }
 
-        if lines_to_move.is_empty() {
+        lines_to_delete.sort();
+        lines_to_delete.dedup();
+        if lines_tuppels_old.is_empty() {
             return None;
         }
 
-        lines_to_move.reverse();
+        println!("lines_to_move {:?}", lines_tuppels_old);
+        lines_tuppels_old.reverse();
+        println!("lines_to_move {:?}", lines_tuppels_old);
+        println!("lines_to_delete {:?}", lines_to_delete);
 
         let mut transitions = vec![];
 
-        for (y_source, _deleted_line) in lines_to_move.clone() {
+        for (y_source, _deleted_line) in lines_tuppels_old.clone() {
             for x in 0..self.width as u16 {
                 let from = (x, y_source).into();
                 let current = self.inner.get(&from);
                 if let Some(t) = current {
                     if t.is_block() {
-                        let to = (x, y_source + 1).into();
+                        let to = (x, y_source + lines_to_delete.len() as u16).into();
                         let current = self.inner.insert(from.clone(), MapTile::Empty);
                         let must_be_empty = self
                             .inner
@@ -341,14 +340,10 @@ impl Map {
                 }
             }
         }
-        self.transitions = Some(transitions);
-        let mut r: Vec<u16> = lines_to_move
-            .into_iter()
-            .map(|(_, deleted)| deleted)
-            .collect();
-        r.sort();
-        r.dedup();
-        Some(r)
+
+        let transitions = Transitions(transitions);
+        lines_to_delete.sort();
+        Some((lines_to_delete, transitions))
     }
     // fn move_blocks_above_line(&mut self, lines: Vec<u16>) -> Vec<(Coordinates, i16)> {
     //     let mut old_blocks = vec![];
@@ -404,11 +399,91 @@ impl Map {
                 anker: (0, 0).into(),
                 layout: m,
                 position_on_board: (bounds.min_x, bounds.min_y).into(),
-                positions: BTreeMap::default(),
                 shape_type: ShapeType::from_char(c),
             }),
             _ => Err(()),
         }
+    }
+    /// only call this if board has a shape
+    pub fn is_free(&self, direction: &RotateEvent) -> bool {
+        // if let Some(shape) = &self.current_tetromino_shape {
+        //     enum Check {
+        //         W,
+        //         S,
+        //         O,
+        //         N,
+        //         Inner,
+        //     }
+        //     let target = if shape.layout.width == shape.layout.height {
+        //         (Check::Inner, None, 0)
+        //     } else if shape.layout.width > shape.layout.height {
+        //         if direction == RotateEvent::ClockWise {
+        //             // xxxx      xoox
+        //             // xooo =>   xoox
+        //             // xooo      xoox
+        //             (Check::N, None, shape.layout.width - shape.layout.height)
+        //         } else {
+        //             // xooo =>   ooxx
+        //             // xooo      ooxx
+        //             // xxxx      ooxx
+        //             (
+        //                 Check::S,
+        //                 Some(Check::W),
+        //                 shape.layout.width - shape.layout.height,
+        //             )
+        //         }
+        //     } else {
+        //         if direction == RotateEvent::ClockWise {
+        //             // xxoo      ooox
+        //             // xxoo =>   ooox
+        //             // xxoo      xxxx
+        //             (Check::W, None, shape.layout.height - shape.layout.width)
+        //         } else {
+        //             // xoox      xooo
+        //             // xoox =>   xooo
+        //             // xoox      xxxx
+        //             (Check::O, None, shape.layout.height - shape.layout.width)
+        //         }
+        //     };
+
+        //     match target {
+        //         (Check::Inner, _, _) => {
+        //             for c in self.get_current_shape_coordinates() {
+        //                 if let Some(x) = self.map.get(&(*c + shape.anker + shape.position_on_board))
+        //                 {
+        //                     if let Tile::Block = x {
+        //                         return false; // Collision
+        //                     } else {
+        //                         continue;
+        //                     }
+        //                 } else {
+        //                     return false; // out of bounds
+        //                 }
+        //             }
+        //         }
+        //         (compass, _, diff) => {
+        //             let count = diff
+        //                 * match compass {
+        //                     Check::N => -1 ,
+        //                     Check::O,
+        //                     _ => 0
+        //                 };
+        //             for c in 0..count {
+        //                 if let Some(t) = self.map.get(&(*c + shape.anker + shape.position_on_board))
+        //                 {
+        //                     if let Tile::Block = t {
+        //                         return false; // Collision
+        //                     } else {
+        //                         continue;
+        //                     }
+        //                 } else {
+        //                     return false; // out of bounds
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        true
     }
 }
 
@@ -494,7 +569,6 @@ impl ToMap for Vec<&str> {
             .collect::<BTreeMap<Coordinates, MapTile>>();
 
         Map {
-            transitions: None,
             inner,
             height,
             width,
@@ -559,7 +633,6 @@ impl ToMap for String {
             .collect::<BTreeMap<Coordinates, MapTile>>();
 
         Map {
-            transitions: None,
             inner,
             height,
             width,
@@ -815,8 +888,9 @@ mod tests {
             include_str!("../../test_resources/move_blocks_down_result.txt").to_string(),
         );
 
-        let res = map.move_blocks_above_empty_lines();
-        assert_eq!(Some(vec![20u16]), res);
+        let (lines, t) = map.move_blocks_above_empty_lines().unwrap();
+        assert_eq!(vec![20u16], lines);
+        assert_eq!(vec![((0, 0).into(), (0, 0).into())], t.0);
         // println!("{}", expected.to_string());
         assert_eq!(map, expected);
     }
@@ -850,7 +924,6 @@ mod tests {
         assert_eq!(c1.len(), 25);
 
         let mut map2 = Map {
-            transitions: None,
             inner: c1.into_iter().map(|c| (c, Tile::Empty)).collect(),
             width: 5,
             height: 5,

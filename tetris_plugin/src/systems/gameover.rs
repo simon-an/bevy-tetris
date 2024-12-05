@@ -1,35 +1,33 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::css::RED, prelude::*};
 
-use crate::{BoardAssets, GameOverEvent, GameStatus};
+use states::GameStatus;
+
+use crate::{BoardAssets, GameOverEvent};
 
 pub fn gameover(
     mut commands: Commands,
     mut game_over_event_rdr: EventReader<GameOverEvent>,
-    mut state: ResMut<State<GameStatus>>,
+    mut state: ResMut<NextState<GameStatus>>,
     board_assets: Res<BoardAssets>,
 ) {
-    let event = game_over_event_rdr.iter().next();
+    let event = game_over_event_rdr.read().next();
     if event.is_some() {
-        state.set(GameStatus::Gameover).unwrap();
+        state.set(GameStatus::Gameover);
 
-        commands.spawn_bundle(Text2dBundle {
-            text: Text {
-                sections: vec![TextSection {
-                    value: "GAME OVER".to_string(),
-                    style: TextStyle {
-                        color: Color::RED,
-                        font: board_assets.font.clone(),
-                        font_size: 50.0,
-                    },
-                }],
-                alignment: TextAlignment {
-                    vertical: VerticalAlign::Center,
-                    horizontal: HorizontalAlign::Center,
-                },
+        commands.spawn((
+            Text2d("GAME OVER".to_string()),
+            TextColor(RED.into()),
+            TextLayout {
+                justify: JustifyText::Center,
+                linebreak: LineBreak::WordBoundary,
             },
-            transform: Transform::from_xyz(0., 0., 1.),
-            ..Default::default()
-        });
+            TextFont {
+                font: board_assets.font.clone(),
+                font_size: 50.0,
+                ..Default::default()
+            },
+            Transform::from_xyz(0., 0., 1.),
+        ));
 
         error!("gameover");
     }

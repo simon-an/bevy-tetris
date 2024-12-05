@@ -15,6 +15,10 @@ pub struct Matrix {
 }
 
 // A block can be part of the currently controlled tetromino.
-#[cfg_attr(feature = "debug", derive(bevy_inspector_egui::Inspectable))]
+#[cfg_attr(feature = "debug", derive(Reflect))]
 #[derive(Component)]
 pub struct CurrentTetromino;
+
+
+#[derive(Component)]
+pub struct PopupRef;

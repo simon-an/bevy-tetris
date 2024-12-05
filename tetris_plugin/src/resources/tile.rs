@@ -9,15 +9,15 @@ pub struct Color(pub u8, pub u8, pub u8);
 impl From<bevy::prelude::Color> for Color {
     fn from(c: bevy::prelude::Color) -> Self {
         Self(
-            (c.r() * 255.0) as u8,
-            (c.g() * 255.0) as u8,
-            (c.b() * 255.0) as u8,
+            (c.to_srgba().red * 255.0) as u8,
+            (c.to_srgba().green * 255.0) as u8,
+            (c.to_srgba().blue * 255.0) as u8,
         )
     }
 }
 impl From<Color> for bevy::prelude::Color {
     fn from(c: Color) -> Self {
-        bevy::prelude::Color::rgb_u8(c.0, c.1, c.2)
+        bevy::prelude::Color::srgb_u8(c.0, c.1, c.2)
     }
 }
 
