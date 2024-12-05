@@ -17,12 +17,12 @@ pub(crate) use engine::*;
 mod animate_line_del;
 // pub(crate) use animate_line_del::animate;
 
-#[cfg(not(feature = "debug"))]
-pub(crate) fn spawn_debug_block() {}
-#[cfg(feature = "debug")]
-mod spawn_debug_tile;
-#[cfg(feature = "debug")]
-pub(crate) use spawn_debug_tile::spawn_debug_block;
+// #[cfg(not(feature = "debug"))]
+// pub(crate) fn spawn_debug_block() {}
+// #[cfg(feature = "debug")]
+// mod spawn_debug_tile;
+// #[cfg(feature = "debug")]
+// pub(crate) use spawn_debug_tile::spawn_debug_block;
 
 mod score;
 pub(crate) use score::score;

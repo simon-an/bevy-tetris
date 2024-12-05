@@ -27,12 +27,13 @@ impl Board {
 
     #[cfg(feature = "debug")]
     pub fn console_output(&self) -> String {
-        let mut buffer = format!(
-            "Board ({}, {}) with tile_size {}\n",
-            self.bounds.size.x, self.bounds.size.y, self.tile_size
-        );
-        let map = self.map.as_tetris();
-        buffer.push_str(&map);
-        buffer
+        "Board currently cannot print its content".to_string()
+        // let mut buffer = format!(
+        //     "Board ({}, {}) with tile_size {}\n",
+        //     self.bounds.size.x, self.bounds.size.y, self.tile_size
+        // );
+        // let map = self.map.as_tetris();
+        // buffer.push_str(&map);
+        // buffer
     }
 }

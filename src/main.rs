@@ -25,7 +25,7 @@ use states::AppState;
 use tetris_plugin::*;
 
 #[cfg(feature = "debug")]
-use bevy_inspector_egui::{RegisterInspectable, WorldInspectorPlugin};
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 fn main() {
     let mut app = App::new();
@@ -38,7 +38,7 @@ fn main() {
     app.add_systems(Startup, setup_board_assets);
     app.add_systems(Update, audio::volume);
     app.init_state::<AppState>();
-  
+
     app.add_systems(
         Update,
         (
@@ -89,7 +89,7 @@ fn main() {
         app.register_type::<menu::MenuComponent>();
     }
     #[cfg(feature = "debug")]
-    app.add_plugin(WorldInspectorPlugin::new());
+    app.add_plugins(WorldInspectorPlugin::new());
     app.run();
 }
 

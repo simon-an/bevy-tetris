@@ -2,8 +2,10 @@
 
 It's Tetris, made with [Bevy](https://github.com/bevyengine/bevy)!
 
-Please note that I am very much still learning Rust and how to use Bevy, so
-at any given point this implementation is probably "sub-optimal" (to put it
-lightly) and in the process of being rewritten.
+````
+RUSTFLAGS=--cfg=web_sys_unstable_apis 
+cargo build --target wasm32-unknown-unknown --release
+wasm-bindgen target/wasm32-unknown-unknown/release/bevy-tetris.wasm --out-dir web --no-typescript
 
-Suggestions and tips are always welcome!
+wasm-bindgen --no-typescript --target web --out-dir ./out/ --out-name "tetris" ./target/wasm32-unknown-unknown/release/bevy-tetris.wasm
+```

@@ -4,13 +4,13 @@ use std::{
     fmt::{Display, Formatter},
 };
 
-use bevy::prelude::{trace, warn, Color, Component, Resource};
+use bevy::prelude::{trace, warn, Color, Component, Resource, Reflect};
 use rand::{distributions::Standard, prelude::Distribution, Rng};
 
 use crate::{Coordinates, Matrix, MoveEvent, TileBlueprint};
 
 // Holds a block's position within a tetromino for rotation
-#[cfg_attr(feature = "debug", derive(bevy_inspector_egui::Inspectable))]
+#[cfg_attr(feature = "debug", derive(Reflect))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Copy, Component)]
 pub struct ShapePosition {
     pub x: i16,
@@ -144,7 +144,7 @@ impl ShapeEntity {
     // }
 }
 
-#[cfg_attr(feature = "debug", derive(bevy_inspector_egui::Inspectable))]
+#[cfg_attr(feature = "debug", derive(Reflect))]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum ShapeType {
     I = 0,
@@ -165,13 +165,13 @@ impl Display for ShapeType {
 impl ShapeType {
     pub fn get_color(&self) -> Color {
         match self {
-            &Self::I => Color::rgb(0.0, 0.7, 0.7),
-            &Self::O => Color::rgb(0.7, 0.7, 0.0), // square, yellow
-            &Self::T => Color::rgb(0.7, 0.0, 0.7), // T, purple
-            &Self::Z => Color::rgb(0.7, 0.0, 0.0), // Z, red
-            &Self::S => Color::rgb(0.0, 0.7, 0.0), // S, green
-            &Self::L => Color::rgb(0.0, 0.0, 0.7), // L, blue
-            &Self::J => Color::rgb(0.9, 0.25, 0.0), // J, orange
+            &Self::I => Color::srgb(0.0, 0.7, 0.7),
+            &Self::O => Color::srgb(0.7, 0.7, 0.0), // square, yellow
+            &Self::T => Color::srgb(0.7, 0.0, 0.7), // T, purple
+            &Self::Z => Color::srgb(0.7, 0.0, 0.0), // Z, red
+            &Self::S => Color::srgb(0.0, 0.7, 0.0), // S, green
+            &Self::L => Color::srgb(0.0, 0.0, 0.7), // L, blue
+            &Self::J => Color::srgb(0.9, 0.25, 0.0), // J, orange
         }
     }
 

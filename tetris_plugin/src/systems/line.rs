@@ -15,7 +15,9 @@ pub(crate) fn line(
 
     let c_e_map: BTreeMap<&Coordinates, Entity> = all.iter().map(|(e, c, _)| (c, e)).collect();
     // assert_eq!(c_e_map.len(), board.map.occupied());
+    
     if c_e_map.len() != map.occupied() {
+        // TODO this can happen when game is over so lets clean up map
         error!(
             "query does not match map state {} {}",
             c_e_map.len(),

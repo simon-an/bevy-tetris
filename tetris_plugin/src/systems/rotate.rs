@@ -62,8 +62,8 @@ pub(crate) fn rotate(
                 info!("board is not free for rotation");
                 return;
             }
-            #[cfg(feature = "debug")]
-            bevy::log::info!("{}", (*board).console_output());
+            // #[cfg(feature = "debug")]
+            // bevy::log::info!("{}", (*board).console_output());
         }
     }
 }

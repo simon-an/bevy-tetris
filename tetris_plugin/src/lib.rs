@@ -20,9 +20,6 @@ use bevy::prelude::*;
 use states::GameStatus;
 // use iyes_loopless::prelude::*;
 
-#[cfg(feature = "debug")]
-use bevy_inspector_egui::RegisterInspectable;
-
 // Condition checking our timer
 // fn tick_timer(mytimer: Res<TickEvent>) -> bool {
 //     mytimer.0.just_finished()
@@ -54,8 +51,11 @@ impl Plugin for TetrisPlugin {
         app.add_systems(Update, game_command_handler::input);
         app.add_systems(
             OnEnter(GameStatus::Init),
-            (create_board, systems::spawn_debug_block, state_running),
+            (create_board, state_running),
         );
+        // #[cfg(feature = "debug")]
+        // app.add_systems(OnEnter(GameStatus::Init), systems::systems::spawn_debug_block);
+
         app.add_systems(OnEnter(GameStatus::Paused), systems::show_popup);
         // app.add_systems(
         //     SystemSet::on_update(GameStatus::Paused)
@@ -89,9 +89,9 @@ impl Plugin for TetrisPlugin {
         #[cfg(feature = "debug")]
         {
             // registering custom component to be able to edit it in inspector
-            app.register_inspectable::<Tetromino>();
-            app.register_inspectable::<CurrentTetromino>();
-            app.register_inspectable::<Coordinates>();
+            app.register_type::<Tetromino>();
+            app.register_type::<CurrentTetromino>();
+            app.register_type::<Coordinates>();
         }
         log::info!("Loaded Tetris Plugin");
     }

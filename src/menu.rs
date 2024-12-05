@@ -9,9 +9,9 @@ pub use demo::movement;
 #[cfg(feature = "demo")]
 pub use demo::setup_game;
 
-#[cfg_attr(feature = "debug", derive(bevy_inspector_egui::Inspectable))]
-#[derive(Component, Debug, Default, Clone, Copy, Reflect)]
-#[reflect(Component)]
+#[cfg_attr(feature = "debug", derive(Reflect))]
+#[derive(Component, Debug, Default, Clone, Copy)]
+#[cfg_attr(feature = "debug", reflect(Component))]
 pub struct MenuComponent;
 
 const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);

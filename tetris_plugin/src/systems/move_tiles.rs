@@ -75,8 +75,8 @@ pub(crate) fn gogo(
                 assert_eq!(mustbe_empty_tile, Tile::Empty);
             });
 
-            #[cfg(feature = "debug")]
-            bevy::log::info!("{}", (*board).console_output());
+            // #[cfg(feature = "debug")]
+            // bevy::log::info!("{}", (*board).console_output());
         }
     }
 }
