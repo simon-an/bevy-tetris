@@ -5,7 +5,7 @@ It's Tetris, made with [Bevy](https://github.com/bevyengine/bevy)!
 ```bash
 RUSTFLAGS=--cfg=web_sys_unstable_apis 
 cargo build --target wasm32-unknown-unknown --release
-wasm-bindgen --no-typescript --target web --out-dir ./out/ --out-name "tetris" ./target/wasm32-unknown-unknown/release/bevy-tetris.wasm
+wasm-bindgen --no-typescript --target web --out-dir ./docs/ --out-name "tetris" ./target/wasm32-unknown-unknown/release/bevy-tetris.wasm
 ```
 
 # TODO's
