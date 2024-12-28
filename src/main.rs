@@ -7,6 +7,7 @@ mod menu;
 mod example_system;
 
 use audio::Volume;
+use bevy::asset::AssetMetaCheck;
 use bevy::color::palettes::css::DARK_GRAY;
 use bevy::color::palettes::css::WHITE;
 use bevy::prelude::*;
@@ -31,7 +32,10 @@ fn main() {
     let mut app = App::new();
 
     app.init_resource::<Volume>();
-    app.add_plugins(DefaultPlugins);
+    app.add_plugins(DefaultPlugins.set(AssetPlugin {
+        meta_check: AssetMetaCheck::Never,
+        ..default()
+    }));
     app.add_plugins(TetrisPlugin);
     // Dont change order above this comment
     app.add_systems(Startup, (camera_setup, audio::setup_audio));
