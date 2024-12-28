@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, user-scalable=no"
+    />
+    <title>Tetris</title>
+    <link data-trunk rel="copy-dir" href="assets" />
+    <!-- <link rel="icon" href="icon.ico" /> -->
+  </head>
+
+  <body style="margin: 0px">
+    <link data-trunk rel="inline" href="docs/sound.js" />
+    <!-- <div class="game-container">
+      <div class="lds-dual-ring"></div>
+      <canvas id="bevy">
+          Javascript and support for canvas is required
+      </canvas>
+  </div> -->
+    <script type="module">
+      import init from "./tetris.js";
+
+      init().catch((error) => {
+        if (
+          !error.message.startsWith(
+            "Using exceptions for control flow, don't mind me. This isn't actually an error!"
+          )
+        ) {
+          throw error;
+        }
+      });
+    </script>
+  </body>
+</html>
