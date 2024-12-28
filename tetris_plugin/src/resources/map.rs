@@ -73,42 +73,42 @@ impl Map {
         self.inner.get(coordinates)
     }
 
-    fn get_current_shape(&self) -> Vec<(Coordinates, Tile)> {
-        self.inner
-            .iter()
-            .filter(|(_, t)| t.is_moveable()) // returns empty as well???
-            .map(|(c, t)| (c.clone(), t.clone()))
-            .collect()
-    }
+    // fn get_current_shape(&self) -> Vec<(Coordinates, Tile)> {
+    //     self.inner
+    //         .iter()
+    //         .filter(|(_, t)| t.is_moveable()) // returns empty as well???
+    //         .map(|(c, t)| (c.clone(), t.clone()))
+    //         .collect()
+    // }
 
-    pub fn get_current_shape_coordinates(&self) -> Vec<Coordinates> {
-        self.inner
-            .iter()
-            .filter(|(_, t)| t.is_moveable()) // returns empty as well???
-            .map(|(c, _)| c.clone())
-            .collect()
-    }
-    pub fn get_current_shape_tile_coordinates(&self) -> Vec<Coordinates> {
-        self.inner
-            .iter()
-            .filter(|(_, t)| t.is_moveable())
-            .map(|(c, _)| c.clone())
-            .collect()
-    }
-    pub fn get_block_coordinates(&self) -> Vec<&Coordinates> {
-        self.inner
-            .iter()
-            .filter(|(_, t)| t.is_block())
-            .map(|(c, _)| c)
-            .collect()
-    }
-    pub fn is_empty(&self) -> bool {
-        self.inner
-            .iter()
-            .filter(|(_, t)| t != &&Tile::Empty)
-            .count()
-            == 0
-    }
+    // pub fn get_current_shape_coordinates(&self) -> Vec<Coordinates> {
+    //     self.inner
+    //         .iter()
+    //         .filter(|(_, t)| t.is_moveable()) // returns empty as well???
+    //         .map(|(c, _)| c.clone())
+    //         .collect()
+    // }
+    // pub fn get_current_shape_tile_coordinates(&self) -> Vec<Coordinates> {
+    //     self.inner
+    //         .iter()
+    //         .filter(|(_, t)| t.is_moveable())
+    //         .map(|(c, _)| c.clone())
+    //         .collect()
+    // }
+    // pub fn get_block_coordinates(&self) -> Vec<&Coordinates> {
+    //     self.inner
+    //         .iter()
+    //         .filter(|(_, t)| t.is_block())
+    //         .map(|(c, _)| c)
+    //         .collect()
+    // }
+    // pub fn is_empty(&self) -> bool {
+    //     self.inner
+    //         .iter()
+    //         .filter(|(_, t)| t != &&Tile::Empty)
+    //         .count()
+    //         == 0
+    // }
     pub fn occupied(&self) -> usize {
         self.inner
             .iter()

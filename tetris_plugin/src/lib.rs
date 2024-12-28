@@ -1,6 +1,7 @@
 mod components;
 pub(crate) mod utils;
 
+use bevy_pkv::PkvStore;
 pub(crate) use components::*;
 mod resources;
 pub use resources::*;
@@ -64,6 +65,7 @@ impl Plugin for TetrisPlugin {
         app.insert_resource(Time::<Fixed>::from_seconds(0.5));
         app.insert_resource(TickCounter(0));
         app.insert_resource(NextShape(rand::random()));
+        app.insert_resource(PkvStore::new("bevy-tetris", "bevy-tetris"));
         // app.init_state::<GameStatus>();
         app.add_sub_state::<states::GameStatus>();
         app.add_sub_state::<states::GameLogicState>();
