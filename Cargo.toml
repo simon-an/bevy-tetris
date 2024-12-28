@@ -2,7 +2,7 @@
 authors = ["Simon Potzernheim"]
 edition = "2021"
 name = "bevy-tetris"
-version = "0.2.0"
+version = "0.2.1"
 
 [workspace]
 members = [ "states",
@@ -18,7 +18,7 @@ debug = ["tetris_plugin/debug", "bevy-inspector-egui"]
 demo = ["tetris_plugin/demo"]
 ui = []
 menu = []
-default = ["ui", "menu"]
+default = ["menu"]
 
 [dependencies]
 bevy-inspector-egui = {version = "0.28.0", optional = true}

@@ -1,11 +1,11 @@
 mod spawn;
-pub(crate) use spawn::spawn_tetromino;
+pub(crate) use spawn::*;
 mod tick;
-pub(crate) use tick::tock;
+pub(crate) use tick::*;
 mod gameover;
 pub(crate) use gameover::gameover;
 mod move_tiles;
-pub(crate) use move_tiles::gogo;
+pub(crate) use move_tiles::*;
 mod rotate;
 pub(crate) use rotate::*;
 mod line;
@@ -15,7 +15,7 @@ pub(crate) use load_and_save::*;
 mod engine;
 pub(crate) use engine::*;
 mod animate_line_del;
-// pub(crate) use animate_line_del::animate;
+pub(crate) use animate_line_del::animate;
 
 // #[cfg(not(feature = "debug"))]
 // pub(crate) fn spawn_debug_block() {}
@@ -32,3 +32,11 @@ mod popup;
 pub(crate) use popup::*;
 mod game_command;
 pub(crate) use game_command::events_to_state;
+mod collision;
+pub(crate) use collision::*;
+mod cleaning;
+pub(crate) use cleaning::convert_to_block;
+mod tetromino;
+pub(crate) use tetromino::*;
+mod sidebar;
+pub(crate) use sidebar::*;

@@ -59,12 +59,12 @@ pub fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
 pub fn menu(
     mut state: ResMut<NextState<AppState>>,
     mut interaction_query: Query<
-    (
-        &Interaction,
-        &mut BackgroundColor,
-        &mut BorderColor,
-        &Children,
-    ),
+        (
+            &Interaction,
+            &mut BackgroundColor,
+            &mut BorderColor,
+            &Children,
+        ),
         (Changed<Interaction>, With<Button>),
     >,
 ) {

@@ -26,7 +26,7 @@ pub fn gameover(
                 font_size: 50.0,
                 ..Default::default()
             },
-            Transform::from_xyz(0., 0., 1.),
+            Transform::from_xyz(0., 0., 1000.),
         ));
 
         error!("gameover");

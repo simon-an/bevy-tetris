@@ -63,7 +63,7 @@ impl Display for Tile {
 }
 
 impl Tile {
-    /// Is the tile a bomb?
+    /// Is the tile a block?
     pub const fn is_block(&self) -> bool {
         // matches!(self, Self::Block(_, _))
         matches!(self, Self::Block(_))

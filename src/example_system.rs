@@ -24,10 +24,10 @@ pub fn change_scale_factor(
     mut windows: Query<&mut Window, With<PrimaryWindow>>,
 ) {
     if let Ok(mut window) = windows.get_single_mut() {
-        if input.just_pressed(KeyCode::ArrowUp) {
+        if input.just_pressed(KeyCode::F1) {
             let scale = window.resolution.scale_factor_override().map(|n| n + 1.);
             window.resolution.set_scale_factor_override(scale);
-        } else if input.just_pressed(KeyCode::ArrowDown) {
+        } else if input.just_pressed(KeyCode::F2) {
             let scale = window
                 .resolution
                 .scale_factor_override()

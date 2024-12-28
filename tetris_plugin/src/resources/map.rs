@@ -1,15 +1,19 @@
-use std::{collections::BTreeMap, fmt::Display};
+use std::{
+    collections::BTreeMap,
+    fmt::{Debug, Display},
+};
 
 use bevy::prelude::Resource;
+use colored::Colorize;
 
 use crate::{
-    components::Matrix, events::MoveEvent, Coordinates, RotateEvent, Shape, ShapeEntity, ShapeType,
-    Tile, TileBlueprint, Transitions,
+    components::Matrix, events::MoveEvent, Coordinates, RotateEvent, Shape, ShapeType, Tile,
+    TileBlueprint, Transitions,
 };
 
 pub type MapTile = Tile;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Resource)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Resource)]
 pub(crate) struct Map {
     pub(crate) inner: BTreeMap<Coordinates, MapTile>,
     pub width: usize,
@@ -190,11 +194,11 @@ impl Map {
                 buffer.push('\n');
             }
             let c = match tile {
-                &MapTile::Block(c) => c,
-                &MapTile::CurrentTetromino(c) => c.to_ascii_uppercase(),
-                &MapTile::Empty => 'x',
+                &MapTile::Block(c) => c.to_string(),
+                &MapTile::CurrentTetromino(c) => c.to_ascii_uppercase().to_string(),
+                &MapTile::Empty => 'x'.to_string(),
             };
-            buffer.push(c);
+            buffer.push_str(&c);
         }
         buffer
     }
@@ -211,11 +215,13 @@ impl Map {
             buffer.push('|');
             // buffer.push_str(&tile.to_string());
             let c = match tile {
-                &MapTile::Block(c) => c.clone(),
-                &MapTile::CurrentTetromino(c) => c.to_ascii_uppercase(),
-                &MapTile::Empty => ' ',
+                &MapTile::Block(c) => c.to_string().red().to_string(),
+                &MapTile::CurrentTetromino(c) => {
+                    format!("{}", c.to_ascii_uppercase()).green().to_string()
+                }
+                &MapTile::Empty => ' '.to_string(),
             };
-            buffer.push(c);
+            buffer.push_str(&format!("{}", c).green().to_string());
             buffer.push('|');
         }
         // buffer.push('\n');
@@ -283,6 +289,10 @@ impl Map {
         return count == self.width;
     }
 
+    /**
+     * Returns a Vec of the lines that have to be deleted and the transitions of the blocks which have to be moved.
+     * The transitions are sorted in a way that the blocks are moved from the bottom to the top.
+     */
     pub fn move_blocks_above_empty_lines(&mut self) -> Option<(Vec<u16>, Transitions)> {
         let mut lines_with_blocks = vec![];
         let mut lines_without_blocks = vec![];
@@ -367,43 +377,43 @@ impl Map {
         lines.to_map()
     }
 
-    pub(crate) fn try_parse_shape(&self) -> Result<ShapeEntity, ()> {
-        struct Bounds {
-            min_x: u16,
-            min_y: u16,
-            max_x: u16,
-            max_y: u16,
-        }
-        let shape_parts = self.get_current_shape();
-        let bounds: Bounds = shape_parts.iter().map(|(c, _)| c).fold(
-            Bounds {
-                min_x: 9999,
-                min_y: 9999,
-                max_x: 0,
-                max_y: 0,
-            },
-            |mut state, &c| {
-                state.min_x = c.x.min(state.min_x);
-                state.min_y = c.y.min(state.min_y);
-                state.max_x = c.x.max(state.max_x);
-                state.max_y = c.y.max(state.max_y);
-                state
-            },
-        );
-        let m = Matrix {
-            width: 1 + bounds.max_x - bounds.min_x,
-            height: 1 + bounds.max_y - bounds.min_y,
-        };
-        match shape_parts.get(0).expect("must exist").1 {
-            Tile::CurrentTetromino(c) => Ok(ShapeEntity {
-                anker: (0, 0).into(),
-                layout: m,
-                position_on_board: (bounds.min_x, bounds.min_y).into(),
-                shape_type: ShapeType::from_char(c),
-            }),
-            _ => Err(()),
-        }
-    }
+    // pub(crate) fn try_parse_shape(&self) -> Result<ShapeEntity, ()> {
+    //     struct Bounds {
+    //         min_x: u16,
+    //         min_y: u16,
+    //         max_x: u16,
+    //         max_y: u16,
+    //     }
+    //     let shape_parts = self.get_current_shape();
+    //     let bounds: Bounds = shape_parts.iter().map(|(c, _)| c).fold(
+    //         Bounds {
+    //             min_x: 9999,
+    //             min_y: 9999,
+    //             max_x: 0,
+    //             max_y: 0,
+    //         },
+    //         |mut state, &c| {
+    //             state.min_x = c.x.min(state.min_x);
+    //             state.min_y = c.y.min(state.min_y);
+    //             state.max_x = c.x.max(state.max_x);
+    //             state.max_y = c.y.max(state.max_y);
+    //             state
+    //         },
+    //     );
+    //     let m = Matrix {
+    //         width: 1 + bounds.max_x - bounds.min_x,
+    //         height: 1 + bounds.max_y - bounds.min_y,
+    //     };
+    //     match shape_parts.get(0).expect("must exist").1 {
+    //         Tile::CurrentTetromino(c) => Ok(ShapeEntity {
+    //             anker: (0, 0).into(),
+    //             layout: m,
+    //             position_on_board: (bounds.min_x, bounds.min_y).into(),
+    //             shape_type: ShapeType::from_char(c),
+    //         }),
+    //         _ => Err(()),
+    //     }
+    // }
     /// only call this if board has a shape
     pub fn is_free(&self, direction: &RotateEvent) -> bool {
         // if let Some(shape) = &self.current_tetromino_shape {
@@ -493,20 +503,33 @@ fn get_lines_south(y: &u16, lines: &Vec<u16>) -> u16 {
 
 impl Display for Map {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = self.as_tetris();
+        writeln!(f, "{}", s)?;
+        Ok(())
+    }
+}
+impl Debug for Map {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "------------------------------------")?;
         for (i, (c, tile)) in self.inner.iter().enumerate() {
             if i % self.width == 0 && i > 1 {
                 writeln!(f, "\n------------------------------------")?;
             }
-            let t = match tile {
+            let t: char = match tile {
                 &MapTile::Block(c) => c,
                 &MapTile::CurrentTetromino(c) => c.to_ascii_uppercase(),
                 &MapTile::Empty => 'x',
             };
-            write!(f, "{}({},{})|", t, c.x, c.y)?;
+            write!(f, "{}({},{})|", format!("{}", t).green(), c.x, c.y)?;
         }
         writeln!(f, "\n------------------------------------")?;
         Ok(())
+    }
+}
+
+impl Into<Map> for Vec<&str> {
+    fn into(self) -> Map {
+        self.to_map()
     }
 }
 
@@ -518,7 +541,7 @@ pub(crate) trait ToMap {
 impl ToMap for Vec<&str> {
     type Item = Map;
     fn to_map(self: Self) -> Self::Item {
-        let len = self.len();
+        let len: usize = self.len();
         let vec_vec = self
             .into_iter()
             .enumerate()
@@ -887,10 +910,24 @@ mod tests {
         let expected = String::to_map(
             include_str!("../../test_resources/move_blocks_down_result.txt").to_string(),
         );
+        assert_eq!(map.height, 22);
 
         let (lines, t) = map.move_blocks_above_empty_lines().unwrap();
         assert_eq!(vec![20u16], lines);
-        assert_eq!(vec![((0, 0).into(), (0, 0).into())], t.0);
+        assert_eq!(
+            vec![
+                ((2, 19).into(), (2, 20).into()),
+                ((3, 19).into(), (3, 20).into()),
+                ((5, 19).into(), (5, 20).into()),
+                ((6, 19).into(), (6, 20).into()),
+                ((9, 19).into(), (9, 20).into()),
+                ((3, 18).into(), (3, 19).into()),
+                ((6, 18).into(), (6, 19).into()),
+                ((9, 18).into(), (9, 19).into()),
+                ((6, 17).into(), (6, 18).into()),
+            ],
+            t.0
+        );
         // println!("{}", expected.to_string());
         assert_eq!(map, expected);
     }

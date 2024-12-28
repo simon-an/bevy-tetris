@@ -1,4 +1,7 @@
-use bevy::{color::palettes::css::RED, prelude::*};
+use bevy::{
+    color::palettes::css::{BLACK, DARK_GRAY, PURPLE, RED},
+    prelude::*,
+};
 
 use crate::{BoardAssets, PopupRef, PopupText};
 
@@ -13,15 +16,45 @@ pub fn hide_popup(mut commands: Commands, popup: Query<Entity, With<PopupRef>>) 
 // }
 
 pub fn show_popup(mut commands: Commands, text: Res<PopupText>, board_assets: Res<BoardAssets>) {
-    commands.spawn((
-        Text::new(&text.0),
-        TextFont {
-            font: board_assets.font.clone(),
-            font_size: 50.0,
-            ..Default::default()
-        },
-        TextColor(RED.into()),
-        Transform::from_xyz(0., 0., 10.),
-        PopupRef,
-    ));
+    println!("show_popup");
+    commands
+        .spawn((
+            Node {
+                display: Display::Flex,
+                position_type: PositionType::Absolute,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                ..default()
+            },
+            PopupRef,
+            // BackgroundColor(BLACK.into()),
+            ZIndex(2000),
+            Name::new("Popup"),
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                Node {
+                    width: Val::Auto,
+                    height: Val::Auto,
+                    min_height: Val::Px(100.0),
+                    min_width: Val::Px(200.0),
+                    position_type: PositionType::Relative,
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
+                Text::new(&text.0),
+                TextLayout::new_with_justify(JustifyText::Center),
+                TextFont {
+                    font: board_assets.font.clone(),
+                    font_size: 50.0,
+                    ..Default::default()
+                },
+                Name::new("PopupText"),
+                TextColor(RED.into()),
+                // BackgroundColor(DARK_GRAY.into()),
+            ));
+        });
 }

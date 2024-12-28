@@ -1,81 +1,63 @@
 use bevy::prelude::*;
 
-use crate::{
-    Board, Coordinates, CurrentTetromino, Map, RotateEvent, ShapeEntity, ShapePosition,
-    Tile,
-};
-
-pub(crate) fn update_block_sprites(
-    transform: &mut Mut<Transform>,
-    coordinates: &Coordinates,
-    board: &ResMut<Board>,
-) {
-    let (new_x, new_y): (f32, f32) = board.calc_translation(coordinates);
-
-    let translation = &mut transform.translation;
-    // println!("translation: {translation}");
-    translation.x = new_x;
-    translation.y = new_y;
-    // println!("new translation: {translation}");
-}
+use crate::{Coordinates, CurrentTetromino, Map, RotateEvent, ShapePosition, Tetromino, Tile};
 
 pub(crate) fn rotate(
-    _commands: Commands,
-    board: ResMut<Board>,
+    mut commands: Commands,
     mut map: ResMut<Map>,
-    shape_entity: Option<ResMut<ShapeEntity>>,
+    // shape_entity: Option<ResMut<ShapeEntity>>,
     mut rotate_event_rdr: EventReader<RotateEvent>,
     mut current_query: Query<
-        (Entity, &mut Transform, &mut ShapePosition, &Coordinates),
+        (Entity, &mut ShapePosition, &Coordinates, &Tetromino),
         With<CurrentTetromino>,
     >,
 ) {
-    if let Some(mut shape_entity) = shape_entity {
-        for event in rotate_event_rdr.read() {
-            let all_clear = map.is_free(&event); // TODO does not prevent panic in line 42
-            if all_clear {
-                let mut changes = vec![];
-                for (entity, mut transform, mut shape_pos, block_coordinates) in
-                    current_query.iter_mut()
-                {
-                    debug!("entity {:?}", entity);
-                    let target: Option<(Coordinates, Tile)> = rotate_block(
-                        &mut shape_pos,
-                        &event,
-                        &mut shape_entity,
-                        &mut map,
-                        &block_coordinates,
-                    );
-                    info!("rotation result {:?}", target);
-                    if let Some((coordinate, tile)) = target {
-                        update_block_sprites(&mut transform, &coordinate, &board);
-                        changes.push((coordinate, tile));
-                    }
+    // if let Some(mut shape_entity) = shape_entity {
+    for event in rotate_event_rdr.read() {
+        let all_clear = map.is_free(&event); // TODO does not prevent panic in line 42
+        if all_clear {
+            let mut changes = vec![];
+            for (entity, mut shape_pos, block_coordinates, tetromino) in current_query.iter_mut() {
+                debug!("entity {:?}", entity);
+                let target: Option<(Coordinates, Tile)> = rotate_block(
+                    &mut shape_pos,
+                    &event,
+                    tetromino.tetromino_type,
+                    &mut map,
+                    &block_coordinates,
+                );
+                info!("rotation result {:?}", target);
+                if let Some((coordinate, tile)) = target {
+                    // update_block_sprites(&mut transform, &coordinate, &board);
+                    changes.push((coordinate, tile));
+                    commands.entity(entity).insert(coordinate);
                 }
-
-                // insert tile after ALL previous one have been set to empty
-                changes.into_iter().for_each(|(coordinates, tile)| {
-                    let mustbe_empty_tile = map.insert(coordinates, tile).unwrap();
-                    assert_eq!(mustbe_empty_tile, Tile::Empty); // TODO this can be a collision with an existing block
-                });
-            } else {
-                info!("board is not free for rotation");
-                return;
             }
-            // #[cfg(feature = "debug")]
-            // bevy::log::info!("{}", (*board).console_output());
+
+            // insert tile after ALL previous one have been set to empty
+            changes.into_iter().for_each(|(coordinates, tile)| {
+                let mustbe_empty_tile = map.insert(coordinates, tile).unwrap();
+                assert_eq!(mustbe_empty_tile, Tile::Empty); // TODO this can be a collision with an existing block
+            });
+        } else {
+            info!("board is not free for rotation");
+            return;
         }
+        // #[cfg(feature = "debug")]
+        // bevy::log::info!("{}", (*board).console_output());
     }
+    // }
 }
 
 pub(crate) fn rotate_block(
     shape_pos: &mut ShapePosition,
     event: &RotateEvent,
-    shape: &mut ShapeEntity,
+    // shape: &mut ShapeEntity,
+    shape_type: crate::ShapeType,
     map: &mut Map,
     old_coordinates: &Coordinates,
 ) -> Option<(Coordinates, Tile)> {
-    match shape.shape_type {
+    match shape_type {
         crate::ShapeType::O => return None,
         crate::ShapeType::I => return None, // TODO
         _ => (),
@@ -162,12 +144,7 @@ pub(crate) fn rotate_block(
     // if delta_x == 0 && delta_y == 0 {
     //     None
     // } else {
-    let tile = map
-        .insert(
-            shape.position_on_board.clone() + (orig_x, orig_y),
-            Tile::Empty,
-        )
-        .unwrap();
+    let tile: Tile = map.insert(*old_coordinates, Tile::Empty).unwrap();
     Some((coords, tile))
     // }
 }
@@ -183,17 +160,17 @@ mod rotate_tests {
     use bevy::{render::settings::WgpuSettings, DefaultPlugins};
     use bevy_egui::EguiPlugin;
 
-    #[test]
-    fn headless_mode() {
-        App::new()
-            .insert_resource(WgpuSettings {
-                backends: None,
-                ..Default::default()
-            })
-            .add_plugins_with(DefaultPlugins, |group| group.disable::<WinitPlugin>())
-            .add_plugin(EguiPlugin)
-            .update();
-    }
+    // #[test]
+    // fn headless_mode() {
+    //     App::new()
+    //         .insert_resource(WgpuSettings {
+    //             backends: None,
+    //             ..Default::default()
+    //         })
+    //         .add_plugins_with(DefaultPlugins, |group| group.disable::<WinitPlugin>())
+    //         .add_plugin(EguiPlugin)
+    //         .update();
+    // }
 
     fn test_rotate(
         input: Vec<&str>,

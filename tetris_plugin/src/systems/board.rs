@@ -1,10 +1,17 @@
+use bevy::color::palettes::css::{BLUE, GRAY, GREEN, RED};
 use bevy::window::{PrimaryWindow, Window};
 use bevy::{log, math::Vec3Swizzles, prelude::*};
 
-use crate::Score;
 use crate::{
     bounds::Bounds2, Board, BoardAssets, BoardOptions, BoardPosition, Map, SpawnEvent, TileSize,
 };
+use crate::{Score, TileMapRoot};
+
+pub fn update_board_position(board: ResMut<Board>, window: Query<&Window, With<PrimaryWindow>>) {
+    let windows = window.single().size();
+    println!("windowsize {:?}", windows);
+    // board.bounds.size = Vec2::new(windows.width(), windows.height);
+}
 
 pub fn create_board(
     mut commands: Commands,
@@ -40,10 +47,26 @@ pub fn create_board(
     let board_entity = commands
         .spawn((
             Name::new("Board"),
-            Transform::from_translation(board_position),
-            GlobalTransform::default(),
+            Transform::default(),
+            Sprite {
+                // image: board_assets.board_material.texture.clone(),
+                color: GREEN.into(),
+                custom_size: Some(board_size),
+                ..Default::default()
+            },
         ))
         .with_children(|parent| {
+            parent.spawn((
+                Name::new("TileMap"),
+                TileMapRoot,
+                Transform::default(),
+                Sprite {
+                    // image: board_assets.board_material.texture.clone(),
+                    color: BLUE.into(),
+                    custom_size: Some(board_size),
+                    ..Default::default()
+                },
+            ));
             // We spawn the board background sprite at the center of the board, since the sprite pivot is centered
             parent
                 .spawn((
@@ -54,7 +77,8 @@ pub fn create_board(
                         ..Default::default()
                     },
                     // This is the anchor of the sprite
-                    Transform::from_xyz(board_size.x / 2., board_size.y / 2., 0.),
+                    // Transform::from_xyz(board_size.x / 2., board_size.y / 2., -10.),
+                    Transform::from_xyz(0., 0., -10.),
                     Name::new("Background"),
                 ))
                 .with_children(|parent| {
@@ -67,16 +91,18 @@ pub fn create_board(
                         &board_assets,
                         board_position.clone(),
                     );
+                    // spawn_tiles(
+                    //     parent,
+                    //     options.map_size.1,
+                    //     options.map_size.0,
+                    //     tile_size,
+                    //     options.tile_padding,
+                    //     &board_assets,
+                    //     board_position.clone(),
+                    // );
                 });
         })
         .id();
-
-    let board_position = match options.position {
-        BoardPosition::Centered { offset } => {
-            Vec3::new(-(board_size.x / 2.), -(board_size.y / 2.), 0.) + offset
-        }
-        BoardPosition::Custom(p) => p,
-    };
 
     commands.insert_resource(Board {
         entity: board_entity,
@@ -114,48 +140,16 @@ fn spawn_tiles_at_background(
             // };
             parent.spawn((
                 Sprite {
-                    color: board_assets.tile_material.color,
+                    color: GRAY.into(),
+                    // color: board_assets.tile_material.color,
                     // image: board_assets.tile_material.texture.clone(),
-                    // custom_size: Some(Vec2::splat(tile_size - padding)),
+                    custom_size: Some(Vec2::splat(tile_size - padding)),
                     ..Default::default()
                 },
                 Transform::from_xyz(
                     (x as f32 * tile_size) + (tile_size / 2.) + (board_position.x),
                     (y as f32 * tile_size) + (tile_size / 2.) + (board_position.y),
-                    1.,
-                ),
-                Name::new(format!("Tile ({}, {})", x, y)),
-            ));
-        }
-    }
-}
-
-fn spawn_tiles(
-    parent: &mut ChildBuilder,
-    height: u16,
-    width: u16,
-    tile_size: f32,
-    padding: f32,
-    board_assets: &BoardAssets,
-) {
-    // Tiles
-    for y in 0..height {
-        for x in 0..width {
-            // let coordinates = Coordinates {
-            //     x: x as u16,
-            //     y: y as u16,
-            // };
-            parent.spawn((
-                Sprite {
-                    color: board_assets.tile_material.color,
-                    custom_size: Some(Vec2::splat(tile_size - padding)),
-                    // image: board_assets.tile_material.texture.clone(),
-                    ..Default::default()
-                },
-                Transform::from_xyz(
-                    (x as f32 * tile_size) + (tile_size / 2.),
-                    (y as f32 * tile_size) + (tile_size / 2.),
-                    2.,
+                    20.,
                 ),
                 Name::new(format!("Tile ({}, {})", x, y)),
             ));

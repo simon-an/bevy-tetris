@@ -1,15 +1,15 @@
 // coordinates.rs
+use crate::ShapePosition;
 use bevy::prelude::Component;
-use std::cmp::Ordering;
-use std::fmt::{self, Display, Formatter};
-use std::ops::{Add, Range, Sub};
 #[cfg(feature = "debug")]
 use bevy::reflect::Reflect;
 #[cfg(feature = "debug")]
-use bevy_inspector_egui::InspectorOptions;
-#[cfg(feature = "debug")]
 use bevy_inspector_egui::prelude::ReflectInspectorOptions;
-use crate::ShapePosition;
+#[cfg(feature = "debug")]
+use bevy_inspector_egui::InspectorOptions;
+use std::cmp::Ordering;
+use std::fmt::{self, Display, Formatter};
+use std::ops::{Add, Range, Sub};
 
 #[cfg_attr(feature = "debug", derive(InspectorOptions, Reflect))]
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Hash, Component)]

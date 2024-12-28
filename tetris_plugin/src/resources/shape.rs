@@ -4,7 +4,7 @@ use std::{
     fmt::{Display, Formatter},
 };
 
-use bevy::prelude::{trace, warn, Color, Component, Resource, Reflect};
+use bevy::prelude::{trace, warn, Color, Component, Reflect, Resource};
 use rand::{distributions::Standard, prelude::Distribution, Rng};
 
 use crate::{Coordinates, Matrix, MoveEvent, TileBlueprint};
@@ -39,23 +39,23 @@ impl PartialEq<(i16, i16)> for ShapePosition {
     }
 }
 
-#[derive(Debug, Clone, Resource)]
-pub struct ShapeEntity {
-    pub shape_type: ShapeType,
-    // pub positions: BTreeMap<Entity, ShapePosition>,
-    // pub positions: HashMap<ShapePosition, Option<Entity>>, // this would allow a shape without a entity
-    // pub positions: HashMap<ShapePosition, Option<Entity>>, // this would allow a shape without a entity
-    pub anker: Coordinates, // Should be the top left corner
-    pub position_on_board: Coordinates,
-    pub layout: Matrix,
-}
+// #[derive(Debug, Clone, Resource)]
+// pub struct ShapeEntity {
+//     pub shape_type: ShapeType,
+//     // pub positions: BTreeMap<Entity, ShapePosition>,
+//     // pub positions: HashMap<ShapePosition, Option<Entity>>, // this would allow a shape without a entity
+//     // pub positions: HashMap<ShapePosition, Option<Entity>>, // this would allow a shape without a entity
+//     pub anker: Coordinates, // Should be the top left corner
+//     pub position_on_board: Coordinates,
+//     pub layout: Matrix,
+// }
 
 #[derive(Debug, Clone)]
 pub struct Shape {
     pub shape_type: ShapeType,
     pub anker: Coordinates, // Should be the top left corner
     pub layout: Matrix,
-    pub positions: BTreeMap<ShapePosition, TileBlueprint>, //[TileBlueprint; N], // size = layout.x * layout.y // size = layout.x * layout.y
+    pub positions: BTreeMap<ShapePosition, TileBlueprint>, //[TileBlueprint; N], // size = layout.x * layout.y
 }
 impl Display for Shape {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -70,79 +70,79 @@ impl Display for Shape {
 #[cfg(test)]
 use bevy::prelude::World;
 
-impl ShapeEntity {
-    pub fn shapepos_as_coords(&self, pos: &ShapePosition) -> Coordinates {
-        self.position_on_board.clone() - self.anker.clone() + pos.clone()
-    }
+// impl ShapeEntity {
+//     pub fn shapepos_as_coords(&self, pos: &ShapePosition) -> Coordinates {
+//         self.position_on_board.clone() - self.anker.clone() + pos.clone()
+//     }
 
-    pub fn move_shape(&mut self, event: &MoveEvent) {
-        let old = self.position_on_board.clone();
-        match event {
-            &MoveEvent::Down => {
-                self.position_on_board.y += 1;
-            }
-            &MoveEvent::Left => {
-                if self.position_on_board.x > 0 {
-                    self.position_on_board.x -= 1;
-                } else {
-                    warn!("cannot move left");
-                }
-            }
-            &MoveEvent::Right => {
-                self.position_on_board.x += 1;
-            }
-        };
-        trace!("shape has moved from {} to {}", old, self.position_on_board);
-    }
+//     pub fn move_shape(&mut self, event: &MoveEvent) {
+//         let old = self.position_on_board.clone();
+//         match event {
+//             &MoveEvent::Down => {
+//                 self.position_on_board.y += 1;
+//             }
+//             &MoveEvent::Left => {
+//                 if self.position_on_board.x > 0 {
+//                     self.position_on_board.x -= 1;
+//                 } else {
+//                     warn!("cannot move left");
+//                 }
+//             }
+//             &MoveEvent::Right => {
+//                 self.position_on_board.x += 1;
+//             }
+//         };
+//         trace!("shape has moved from {} to {}", old, self.position_on_board);
+//     }
 
-    #[cfg(test)]
-    pub fn spawn(shape: Shape, position_on_board: &Coordinates, world: &mut World) -> Self {
-        use bevy::prelude::Entity;
+//     #[cfg(test)]
+//     pub fn spawn(shape: Shape, position_on_board: &Coordinates, world: &mut World) -> Self {
+//         use bevy::prelude::Entity;
 
-        use crate::components::Block;
+//         use crate::components::Block;
 
-        let Shape {
-            anker,
-            layout,
-            positions,
-            shape_type,
-        } = shape;
-        let positions: BTreeMap<Entity, ShapePosition> = positions
-            .into_iter()
-            .map(|(pos, _blueprint)| (world.spawn((Block, pos)).id(), pos))
-            .collect();
-        Self {
-            anker,
-            layout,
-            shape_type,
-            position_on_board: position_on_board.clone(),
-        }
-    }
-    // pub fn is_y_i(&self) -> bool {
-    //     assert_eq!(self.shape_type, ShapeType::I);
-    //     assert_eq!(positions.len(), 4);
-    //     let positions: Vec<&ShapePosition> = positions.values().collect();
-    //     positions[0].x == 0 && positions[1].x == 0 && positions[2].x == 0 && positions[3].x == 0
-    // }
-    // pub fn is_x_i(&self) -> bool {
-    //     assert_eq!(self.shape_type, ShapeType::I);
-    //     let positions: Vec<&ShapePosition> = positions.values().collect();
-    //     assert_eq!(positions.len(), 4);
-    //     positions[0].y == 0 && positions[1].x == 0 && positions[2].x == 0 && positions[3].x == 0
-    // }
-    // pub fn is_block(&self, c: Coordinates) -> Option<ShapePosition> {
-    //     positions
-    //         .values()
-    //         .find(|p| (c - (self.anker + **p)) == self.position_on_board)
-    //         .map(|p| p.clone())
-    // }
-    // pub fn reflect(&self, c: Coordinates) -> Option<ShapePosition> {
-    //     positions
-    //         .values()
-    //         .find(|p| (c - (self.anker + **p)) == self.position_on_board)
-    //         .map(|s| s.clone())
-    // }
-}
+//         let Shape {
+//             anker,
+//             layout,
+//             positions,
+//             shape_type,
+//         } = shape;
+//         let positions: BTreeMap<Entity, ShapePosition> = positions
+//             .into_iter()
+//             .map(|(pos, _blueprint)| (world.spawn((Block, pos)).id(), pos))
+//             .collect();
+//         Self {
+//             anker,
+//             layout,
+//             shape_type,
+//             position_on_board: position_on_board.clone(),
+//         }
+//     }
+//     // pub fn is_y_i(&self) -> bool {
+//     //     assert_eq!(self.shape_type, ShapeType::I);
+//     //     assert_eq!(positions.len(), 4);
+//     //     let positions: Vec<&ShapePosition> = positions.values().collect();
+//     //     positions[0].x == 0 && positions[1].x == 0 && positions[2].x == 0 && positions[3].x == 0
+//     // }
+//     // pub fn is_x_i(&self) -> bool {
+//     //     assert_eq!(self.shape_type, ShapeType::I);
+//     //     let positions: Vec<&ShapePosition> = positions.values().collect();
+//     //     assert_eq!(positions.len(), 4);
+//     //     positions[0].y == 0 && positions[1].x == 0 && positions[2].x == 0 && positions[3].x == 0
+//     // }
+//     // pub fn is_block(&self, c: Coordinates) -> Option<ShapePosition> {
+//     //     positions
+//     //         .values()
+//     //         .find(|p| (c - (self.anker + **p)) == self.position_on_board)
+//     //         .map(|p| p.clone())
+//     // }
+//     // pub fn reflect(&self, c: Coordinates) -> Option<ShapePosition> {
+//     //     positions
+//     //         .values()
+//     //         .find(|p| (c - (self.anker + **p)) == self.position_on_board)
+//     //         .map(|s| s.clone())
+//     // }
+// }
 
 #[cfg_attr(feature = "debug", derive(Reflect))]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -155,6 +155,8 @@ pub enum ShapeType {
     L = 5,
     J = 6,
 }
+#[derive(Debug, Clone, PartialEq, Eq, Resource)]
+pub struct NextShape(pub ShapeType);
 
 impl Display for ShapeType {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {

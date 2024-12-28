@@ -56,7 +56,7 @@ impl Default for BoardOptions {
             map_size: (15, 15),
             position: Default::default(),
             tile_size: Default::default(),
-            tile_padding: 0.,
+            tile_padding: 2.,
         }
     }
 }

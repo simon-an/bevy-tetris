@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 
-use bevy::prelude::{States, SubStates, StateSet};
+use bevy::prelude::{ComputedStates, StateSet, States, SubStates};
 // use colored::Colorize;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, SubStates, Default)]
@@ -30,6 +30,41 @@ impl Display for GameStatus {
     }
 }
 
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub struct InGame;
+impl ComputedStates for InGame {
+    type SourceStates = Option<GameStatus>;
+    fn compute(sources: Option<GameStatus>) -> Option<Self> {
+        match sources {
+            Some(GameStatus::Running) => Some(InGame),
+            Some(GameStatus::Paused) => Some(InGame),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash, SubStates, Default)]
+#[source(InGame = InGame)]
+pub enum GameLogicState {
+    #[default]
+    Spawning,
+    Ticking,
+    Cleaning,
+}
+
+impl Display for GameLogicState {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                GameLogicState::Spawning => "Spawning",
+                GameLogicState::Ticking => "Ticking",
+                GameLogicState::Cleaning => "Cleaning",
+            }
+        )
+    }
+}
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, States)]
 pub enum AppState {

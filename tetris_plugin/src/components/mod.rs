@@ -19,6 +19,14 @@ pub struct Matrix {
 #[derive(Component)]
 pub struct CurrentTetromino;
 
-
 #[derive(Component)]
 pub struct PopupRef;
+
+#[derive(Component)]
+pub struct PreviewRef;
+
+#[derive(Component)]
+pub struct TileMapRoot;
+
+#[derive(Component)]
+pub struct SidebarRef;

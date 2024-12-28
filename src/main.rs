@@ -36,7 +36,7 @@ fn main() {
     // Dont change order above this comment
     app.add_systems(Startup, (camera_setup, audio::setup_audio));
     app.add_systems(Startup, setup_board_assets);
-    app.add_systems(Update, audio::volume);
+    app.add_systems(Update, (audio::volume, audio::adapt_volume));
     app.init_state::<AppState>();
 
     app.add_systems(
@@ -102,17 +102,7 @@ fn configure_visuals(mut egui_ctx: Query<&mut EguiContext>) {
 }
 
 fn camera_setup(mut commands: Commands) {
-    commands.spawn((
-        Camera2d,
-        // Window {
-        //     present_mode: bevy::window::PresentMode::AutoVsync,
-        //     title: "Snake!".to_string(),
-        //     resizable: true,
-        //     transparent: true,
-        //     position: WindowPosition::Centered(MonitorSelection::Current),
-        //     ..Default::default()
-        // },
-    ));
+    commands.spawn((Camera2d,));
 }
 
 fn setup_board_assets(mut commands: Commands, asset_server: Res<AssetServer>) {

@@ -6,14 +6,6 @@ use bevy::{
 #[derive(Debug, Copy, Clone, Event)]
 pub struct ScoreEvent(pub u64);
 
-#[derive(Debug, Clone, Resource)]
-pub struct Tick(pub Timer);
-impl Default for Tick {
-    fn default() -> Self {
-        Self(Timer::from_seconds(1.0, bevy::time::TimerMode::Repeating))
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct PrintInfoTimer(pub Timer);
 

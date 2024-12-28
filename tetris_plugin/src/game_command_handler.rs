@@ -3,6 +3,11 @@ use bevy::log;
 use bevy::prelude::*;
 
 pub fn input(keys: Res<ButtonInput<KeyCode>>, mut game_command_event: EventWriter<GameCommand>) {
+    // println!("input");
+    if keys.just_pressed(KeyCode::Pause) {
+        log::debug!("Pause key detected");
+        game_command_event.send(GameCommand::TogglePause);
+    }
     if keys.just_pressed(KeyCode::Escape) {
         log::debug!("Escape key detected");
         game_command_event.send(GameCommand::TogglePause);

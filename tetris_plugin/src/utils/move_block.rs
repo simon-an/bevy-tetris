@@ -2,15 +2,18 @@ use bevy::prelude::*;
 
 use crate::*;
 
+#[deprecated]
 pub(crate) fn move_block(
     e: &Entity,
     event: &MoveEvent,
-    shape: &ShapeEntity,
-    pos: &ShapePosition,
+    // shape: &ShapeEntity,
+    coordinates: &Coordinates,
+    // pos: &ShapePosition,
     map: &mut Map,
 ) -> Result<Option<(Coordinates, Tile)>, String> {
     debug!("move entity: {:?}", e);
-    let mut coords = shape.position_on_board.clone() - shape.anker.clone() + pos.clone();
+    // let mut coords = shape.position_on_board.clone() - shape.anker.clone() + pos.clone();
+    let mut coords = coordinates.clone();
     let tile = map.insert(coords, Tile::Empty);
     if tile.is_none() {
         return Err("tile not found".to_string());
